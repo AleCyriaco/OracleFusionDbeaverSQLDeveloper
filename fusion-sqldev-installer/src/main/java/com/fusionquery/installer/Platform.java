@@ -1,6 +1,8 @@
 package com.fusionquery.installer;
 
 import java.io.File;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -22,8 +24,17 @@ public enum Platform {
             case WINDOWS:
                 String appData = System.getenv("APPDATA");
                 if (appData != null && !appData.isEmpty()) {
-                    for (String candidate : new String[]{"sqldeveloper", "SQL Developer"}) {
-                        Path p = Paths.get(appData, candidate);
+                    // Prefer the candidate that actually contains a SQL Developer
+                    // <version>/product.conf — covers both historical "SQL Developer"
+                    // (capitalized) and modern "sqldeveloper" (lowercase) layouts.
+                    String[] candidates = {"SQL Developer", "sqldeveloper"};
+                    for (String c : candidates) {
+                        Path p = Paths.get(appData, c);
+                        if (looksLikeUserDir(p)) return p;
+                    }
+                    // Fall back to any candidate that simply exists on disk.
+                    for (String c : candidates) {
+                        Path p = Paths.get(appData, c);
                         if (p.toFile().exists()) return p;
                     }
                     return Paths.get(appData, "sqldeveloper");
@@ -34,6 +45,18 @@ public enum Platform {
             default:
                 return Paths.get(home, ".sqldeveloper");
         }
+    }
+
+    /** True if the given directory contains at least one '<version>/product.conf'. */
+    private static boolean looksLikeUserDir(Path dir) {
+        if (!Files.isDirectory(dir)) return false;
+        try (DirectoryStream<Path> entries = Files.newDirectoryStream(dir)) {
+            for (Path entry : entries) {
+                if (Files.isDirectory(entry)
+                        && Files.isRegularFile(entry.resolve("product.conf"))) return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
     }
 
     /**
