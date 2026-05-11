@@ -71,7 +71,7 @@ SQL Developer user directory:
 |---------|-------------------------------------------------------|
 | macOS   | `~/.sqldeveloper`                                     |
 | Linux   | `~/.sqldeveloper`                                     |
-| Windows | `%APPDATA%\SQL Developer` (or `%USERPROFILE%\.sqldeveloper`) |
+| Windows | `%APPDATA%\sqldeveloper` (modern) or `%APPDATA%\SQL Developer` (older versions) |
 
 ---
 

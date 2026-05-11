@@ -22,8 +22,11 @@ public enum Platform {
             case WINDOWS:
                 String appData = System.getenv("APPDATA");
                 if (appData != null && !appData.isEmpty()) {
-                    Path p = Paths.get(appData, "SQL Developer");
-                    if (p.toFile().exists()) return p;
+                    for (String candidate : new String[]{"sqldeveloper", "SQL Developer"}) {
+                        Path p = Paths.get(appData, candidate);
+                        if (p.toFile().exists()) return p;
+                    }
+                    return Paths.get(appData, "sqldeveloper");
                 }
                 return Paths.get(home, ".sqldeveloper");
             case MACOS:
