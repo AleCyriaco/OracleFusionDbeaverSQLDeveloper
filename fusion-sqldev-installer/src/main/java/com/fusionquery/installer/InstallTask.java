@@ -117,6 +117,11 @@ public class InstallTask {
     }
 
     private void updateProductConf(Path productConf, Path extDir) throws IOException {
+        if (!Files.isRegularFile(productConf)) {
+            Files.createDirectories(productConf.getParent());
+            Files.write(productConf, new ArrayList<String>(), StandardCharsets.UTF_8);
+            log.accept("Created " + productConf + " (was missing — portable launcher reads sqldeveloper.conf from install root)");
+        }
         List<String> lines = Files.readAllLines(productConf, StandardCharsets.UTF_8);
         List<String> filtered = removeManagedBlockLines(lines);
 

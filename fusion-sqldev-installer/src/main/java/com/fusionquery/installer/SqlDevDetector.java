@@ -1,6 +1,5 @@
 package com.fusionquery.installer;
 
-import java.io.File;
 import java.nio.file.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -43,14 +42,21 @@ public class SqlDevDetector {
             }
         } catch (Exception ignored) {}
 
-        for (Map.Entry<String, Path> e : versionDirs.entrySet()) {
-            String version = e.getKey();
-            Path productConfDir = e.getValue();
-            Path productConf = productConfDir.resolve("product.conf");
+        // Union of versions found via either signal. Portable SQL Developer
+        // installs sometimes have only the system<version> dir (the launcher
+        // reads sqldeveloper.conf from the install root, never creating
+        // <userdir>/<version>/product.conf) — in that case product.conf is
+        // synthesized by the installer.
+        Set<String> versions = new TreeSet<>();
+        versions.addAll(versionDirs.keySet());
+        versions.addAll(systemDirs.keySet());
+
+        for (String version : versions) {
+            Path versionDir = versionDirs.get(version);
+            if (versionDir == null) versionDir = userDir.resolve(version);
+            Path productConf = versionDir.resolve("product.conf");
             Path systemDir = systemDirs.get(version);
-            if (Files.isRegularFile(productConf)) {
-                out.add(new Detection(version, productConf, systemDir));
-            }
+            out.add(new Detection(version, productConf, systemDir));
         }
         return out;
     }
