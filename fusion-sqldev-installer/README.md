@@ -4,7 +4,7 @@ Cross-platform Java installer that registers the **Fusion Query JDBC driver** as
 
 ## Requirements
 
-- Java 11+ (any JDK/JRE)
+- Java 8+ (any JDK/JRE)
 - Oracle SQL Developer 24.x (other versions may work but are not tested)
 
 ## What it does

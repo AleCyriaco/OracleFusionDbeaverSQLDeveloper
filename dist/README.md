@@ -9,7 +9,7 @@ This package contains both install paths. Pick whichever fits your client.
 | `fusion-query-jdbc-1.0.0.jar`         | Standalone driver (DBeaver, DataGrip, SQL Developer's JDBC tab)      |
 | `fusion-sqldev-installer-1.0.0.jar`   | Cross-platform installer for SQL Developer's native connection type  |
 
-Requires **Java 11+**.
+Requires **Java 8+**.
 
 ---
 

@@ -18,7 +18,7 @@ Pre-built artifacts are in [`dist/`](dist/). Grab the release ZIP:
 | `fusion-sqldev-installer-1.0.0.jar`   | Cross-platform installer for SQL Developer's native connection type  |
 | `README.md`                           | Bundled quick-start                                                  |
 
-You need **Java 11+** installed.
+You need **Java 8+** installed.
 
 ---
 
@@ -213,7 +213,7 @@ Oracle errors are translated to friendlier messages:
 
 Requirements:
 
-- JDK 11+
+- JDK 11+ (needed to build the SQL Developer extension; the driver and installer target Java 8 bytecode for maximum runtime compatibility)
 - Maven 3.6+
 - Oracle SQL Developer 24.3.1 installed locally (the build pulls JARs from the SQL Developer installation for compile-time `provided` dependencies)
 
