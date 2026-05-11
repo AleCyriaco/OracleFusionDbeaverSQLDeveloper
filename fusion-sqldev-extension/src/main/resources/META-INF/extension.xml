@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension xmlns="http://jcp.org/jsr/198/extension-manifest"
+           id="com.fusionquery.sqldev"
+           version="1.0.0"
+           esdk-version="1.0">
+
+  <name>Fusion Query - Oracle Fusion Cloud JDBC</name>
+  <owner>FusionQuery</owner>
+
+  <feature-member id="sqldeveloper" xmlns="http://xmlns.oracle.com/ide/extension"/>
+
+  <trigger-hooks xmlns="http://xmlns.oracle.com/ide/extension">
+    <triggers>
+      <sqldev-navigator-hook xmlns="http://xmlns.oracle.com/sqldeveloper/sqldev-navigator">
+        <descriptor>/com/fusionquery/sqldev/xml/fusion.xml</descriptor>
+      </sqldev-navigator-hook>
+      <database-connection-hook xmlns="http://xmlns.oracle.com/ide/extension/db">
+        <connection-types>
+          <connection-type>
+            <subtype>fusionCloud</subtype>
+            <connection-creator>com.fusionquery.sqldev.FusionConnectionCreator</connection-creator>
+            <display-name>Oracle Fusion Cloud (BIP)</display-name>
+            <panel-class>com.fusionquery.sqldev.FusionConnectionPanel</panel-class>
+            <driver-classes>
+              <driver-class jdbc-protocol="fusion">com.fusionquery.jdbc.FusionDriver</driver-class>
+            </driver-classes>
+          </connection-type>
+        </connection-types>
+      </database-connection-hook>
+    </triggers>
+  </trigger-hooks>
+
+  <hooks>
+    <jdeveloper-hook xmlns="http://xmlns.oracle.com/jdeveloper/1013/extension">
+      <addins>
+        <addin>com.fusionquery.sqldev.FusionAddin</addin>
+      </addins>
+    </jdeveloper-hook>
+  </hooks>
+
+</extension>

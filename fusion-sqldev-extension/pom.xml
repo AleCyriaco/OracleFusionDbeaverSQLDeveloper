@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.fusionquery</groupId>
+  <artifactId>fusion-sqldev-extension</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <properties>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+    <sqld.version>24.3.1</sqld.version>
+    <driver.jar>fusion-query-jdbc-1.0.0.jar</driver.jar>
+  </properties>
+
+  <dependencies>
+    <!-- Our JDBC driver (bundled in the extension JAR) -->
+    <dependency>
+      <groupId>com.fusionquery</groupId>
+      <artifactId>fusion-query-jdbc</artifactId>
+      <version>1.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- SQL Developer APIs (provided at runtime by SQL Developer) -->
+    <dependency>
+      <groupId>com.oracle.sqldeveloper</groupId>
+      <artifactId>dbtools-common</artifactId>
+      <version>${sqld.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.oracle.sqldeveloper</groupId>
+      <artifactId>dbtools-core</artifactId>
+      <version>${sqld.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.oracle.sqldeveloper</groupId>
+      <artifactId>oracle.jdeveloper.db.connection</artifactId>
+      <version>${sqld.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.oracle.sqldeveloper</groupId>
+      <artifactId>oracle.sqldeveloper</artifactId>
+      <version>${sqld.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.oracle.sqldeveloper</groupId>
+      <artifactId>oracle.ide</artifactId>
+      <version>${sqld.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.oracle.sqldeveloper</groupId>
+      <artifactId>idert</artifactId>
+      <version>${sqld.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Copy the JDBC driver JAR into target/classes/lib/ so it gets bundled -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <id>copy-driver-jar</id>
+            <phase>generate-resources</phase>
+            <goals><goal>copy</goal></goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.fusionquery</groupId>
+                  <artifactId>fusion-query-jdbc</artifactId>
+                  <version>1.0.0</version>
+                  <outputDirectory>${project.build.outputDirectory}/lib</outputDirectory>
+                  <destFileName>${driver.jar}</destFileName>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Build JAR with OSGi/SQL Developer manifest headers -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.3.0</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Manifest-Version>1.0</Manifest-Version>
+              <Bundle-SymbolicName>com.fusionquery.sqldev</Bundle-SymbolicName>
+              <Bundle-Version>1.0.0</Bundle-Version>
+              <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+              <Bundle-Name>Fusion Query JDBC for SQL Developer</Bundle-Name>
+              <Bundle-ClassPath>.,lib/${driver.jar}</Bundle-ClassPath>
+              <Require-Bundle>oracle.ide,oracle.idert,oracle.javatools,oracle.javatools-nodeps,oracle.db-api,oracle.db-ca,oracle.jdeveloper.db.connection,oracle.ide.db,oracle.sqldeveloper,oracle.sqldeveloper.utils,oracle.sqldeveloper.utils-nodeps,oracle.jewt-core,oracle.icons,oracle.uic,oracle.ide.navigator</Require-Bundle>
+              <Export-Package>com.fusionquery.sqldev,com.fusionquery.jdbc</Export-Package>
+            </manifestEntries>
+            <addMavenDescriptor>false</addMavenDescriptor>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

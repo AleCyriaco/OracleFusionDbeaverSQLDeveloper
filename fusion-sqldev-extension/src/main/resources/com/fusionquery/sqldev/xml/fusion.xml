@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<navigator RESOURCE_FILE="com.fusionquery.sqldev.FusionNavigatorResource"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation="navigator.xsd">
+  <connection id="fusionCloud"
+              connectionPanelClass="com.fusionquery.sqldev.FusionConnectionPanel"
+              connectionTabName="Oracle Fusion Cloud (BIP)"
+              supportsOtherSchemas="false"
+              showAllSchemas="true"
+              supportsCatalog="false">
+    <icon RSKEY="FUSION_ICON" />
+  </connection>
+</navigator>
