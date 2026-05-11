@@ -13,6 +13,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <ext.jar>fusion-sqldev-extension-1.0.0.jar</ext.jar>
+    <driver.jar>fusion-query-jdbc-1.0.0.jar</driver.jar>
   </properties>
 
   <build>
@@ -35,6 +36,12 @@
                   <directory>${project.basedir}/../fusion-sqldev-extension/target</directory>
                   <includes>
                     <include>${ext.jar}</include>
+                  </includes>
+                </resource>
+                <resource>
+                  <directory>${project.basedir}/../fusion-query-jdbc/target</directory>
+                  <includes>
+                    <include>${driver.jar}</include>
                   </includes>
                 </resource>
               </resources>
