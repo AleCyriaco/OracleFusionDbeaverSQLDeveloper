@@ -26,7 +26,7 @@ Adds **"Oracle Fusion Cloud (BIP)"** as a dedicated entry in SQL Developer's *Da
    Uninstall: `java -jar fusion-sqldev-installer-1.0.0.jar --cli --uninstall`
 2. **Fully quit** SQL Developer (Cmd+Q / File → Exit) and reopen.
 3. *File → New Database Connection*. In **Database Type**, pick **Oracle Fusion Cloud (BIP)**.
-4. Fill in Username / Password / Hostname (e.g. `fa-xxxx-saasfaprod1.fa.ocs.oraclecloud.com`).
+4. Fill in Username / Password / Hostname (e.g. `fa-xxxx-saasabcd.fa.ocs.oraclecloud.com`).
 
 ---
 
@@ -35,7 +35,7 @@ Adds **"Oracle Fusion Cloud (BIP)"** as a dedicated entry in SQL Developer's *Da
 1. Open SQL Developer.
 2. *Tools → Preferences → Database → Third Party JDBC Drivers → Add Entry…* and pick `fusion-query-jdbc-1.0.0.jar`.
 3. **New Connection** → **JDBC** tab.
-4. URL: `jdbc:fusion://fa-xxxx-saasfaprod1.fa.ocs.oraclecloud.com`
+4. URL: `jdbc:fusion://fa-xxxx-saasabcd.fa.ocs.oraclecloud.com`
 5. Username / Password → **Test** → **Connect**.
 
 ---
@@ -46,7 +46,7 @@ Adds **"Oracle Fusion Cloud (BIP)"** as a dedicated entry in SQL Developer's *Da
 2. Driver Name: `Oracle Fusion Cloud (BIP)`, Class Name: `com.fusionquery.jdbc.FusionDriver`, URL Template: `jdbc:fusion://{host}`.
 3. **Libraries** tab → **Add File** → pick `fusion-query-jdbc-1.0.0.jar` → **OK**.
 4. *Database → New Database Connection → Oracle Fusion Cloud (BIP)*.
-5. Host: `fa-xxxx-saasfaprod1.fa.ocs.oraclecloud.com`, User, Password → **Test Connection** → **Finish**.
+5. Host: `fa-xxxx-saasabcd.fa.ocs.oraclecloud.com`, User, Password → **Test Connection** → **Finish**.
 
 ---
 

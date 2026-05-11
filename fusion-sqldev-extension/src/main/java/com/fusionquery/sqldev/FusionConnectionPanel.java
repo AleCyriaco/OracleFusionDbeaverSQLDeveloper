@@ -27,7 +27,7 @@ public class FusionConnectionPanel extends IConnectionPanel {
         add(new JLabel("Hostname:"), gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
         hostField = new JTextField(35);
-        hostField.setToolTipText("e.g. fa-xxxx-saasfaprod1.fa.ocs.oraclecloud.com");
+        hostField.setToolTipText("e.g. fa-xxxx-saasabcd.fa.ocs.oraclecloud.com");
         add(hostField, gbc);
 
         // Report Path row (optional)

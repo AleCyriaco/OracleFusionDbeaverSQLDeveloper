@@ -52,7 +52,7 @@ Adds **"Oracle Fusion Cloud (BIP)"** as a dedicated entry in SQL Developer's *Da
 4. *File → New → Database Connection*. In **Database Type**, pick **Oracle Fusion Cloud (BIP)**.
 5. Fill in:
    - **Username** / **Password**: your Fusion Cloud credentials.
-   - **Hostname**: your Fusion host, e.g. `fa-xxxx-saasfaprod1.fa.ocs.oraclecloud.com` (no `https://`).
+   - **Hostname**: your Fusion host, e.g. `fa-xxxx-saasabcd.fa.ocs.oraclecloud.com` (no `https://`).
    - **Report Path** (optional): leave blank to auto-deploy.
    - **Timeout seconds** (optional): defaults to 120.
 6. Click **Test** → **Connect**.
@@ -86,7 +86,7 @@ The same workflow you'd use with MySQL Connector/J: register the driver JAR, the
 5. Click **New Connection** (green plus). In the connection dialog, choose the **JDBC** tab.
 6. Fill in:
    - **Username** / **Password**: your Fusion Cloud credentials.
-   - **JDBC URL**: `jdbc:fusion://fa-xxxx-saasfaprod1.fa.ocs.oraclecloud.com`
+   - **JDBC URL**: `jdbc:fusion://fa-xxxx-saasabcd.fa.ocs.oraclecloud.com`
      Optional URL parameters:
      `jdbc:fusion://host?reportPath=/Custom/FusionQuery/Proxy/v1/csv.xdo&timeout=120`
 7. **Test** → **Connect**.
@@ -109,7 +109,7 @@ The same workflow you'd use with MySQL Connector/J: register the driver JAR, the
 6. Click **OK** to save the driver.
 7. *Database → New Database Connection → select "Oracle Fusion Cloud (BIP)"*.
 8. Fill in:
-   - **Host**: your Fusion host, e.g. `fa-xxxx-saasfaprod1.fa.ocs.oraclecloud.com`
+   - **Host**: your Fusion host, e.g. `fa-xxxx-saasabcd.fa.ocs.oraclecloud.com`
    - **User** / **Password**: your Fusion credentials.
    - Optional: switch to the **Driver properties** tab and add `reportPath` or `timeout`.
 9. **Test Connection** → **Finish**.

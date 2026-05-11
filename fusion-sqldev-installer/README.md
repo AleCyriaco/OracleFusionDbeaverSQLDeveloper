@@ -45,7 +45,7 @@ After installation, **fully quit SQL Developer** (Cmd+Q on macOS, File → Exit 
 
 ## Connection fields
 
-- **Hostname**: e.g. `fa-xxxx-saasfaprod1.fa.ocs.oraclecloud.com`
+- **Hostname**: e.g. `fa-xxxx-saasabcd.fa.ocs.oraclecloud.com`
 - **Username / Password**: your Fusion Cloud user
 - **Report Path** (optional): leave blank to auto-deploy. Example: `/Custom/FusionQuery/Proxy/v1/csv.xdo`
 - **Timeout** (optional): default 120s
