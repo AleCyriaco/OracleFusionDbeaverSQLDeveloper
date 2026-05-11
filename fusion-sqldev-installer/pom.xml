@@ -83,8 +83,10 @@
                 <mainClass>com.fusionquery.installer.Installer</mainClass>
               </classPath>
               <jre>
+                <path>jre</path>
                 <minVersion>1.8.0</minVersion>
                 <jdkPreference>preferJre</jdkPreference>
+                <bundledJre64Bit>true</bundledJre64Bit>
               </jre>
               <versionInfo>
                 <fileVersion>1.0.0.0</fileVersion>

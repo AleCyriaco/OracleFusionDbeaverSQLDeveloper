@@ -12,14 +12,17 @@ Pre-built artifacts are in [`dist/`](dist/). Grab the release ZIP:
 
 [**fusion-query-jdbc-1.0.0.zip**](dist/fusion-query-jdbc-1.0.0.zip) — contains:
 
-| File                                  | Use for                                                              |
-|---------------------------------------|----------------------------------------------------------------------|
-| `fusion-query-jdbc-1.0.0.jar`         | Standalone JDBC driver (DBeaver, DataGrip, SQL Developer JDBC tab)   |
-| `fusion-sqldev-installer-1.0.0.exe`   | Windows installer (double-click to run, no terminal required)        |
-| `fusion-sqldev-installer-1.0.0.jar`   | Cross-platform installer (`java -jar ...`)                           |
-| `README.md`                           | Bundled quick-start                                                  |
+| File                                                          | Use for                                                                          |
+|---------------------------------------------------------------|----------------------------------------------------------------------------------|
+| `fusion-query-jdbc-1.0.0.jar`                                 | Standalone JDBC driver (DBeaver, DataGrip, SQL Developer JDBC tab)               |
+| `fusion-sqldev-installer-1.0.0-windows-bundle.zip` (~39 MB)   | Windows installer **with bundled JRE** — no Java required                        |
+| `fusion-sqldev-installer-1.0.0.exe` (~750 KB)                 | Windows installer (lean — needs an existing Java 8+ JRE/JDK)                     |
+| `fusion-sqldev-installer-1.0.0.jar` (~685 KB)                 | Cross-platform installer (`java -jar ...`, needs Java 8+ installed)              |
+| `README.md`                                                   | Bundled quick-start                                                              |
 
-You need **Java 8+** installed.
+Java requirement:
+- *Lean* installers need an existing **Java 8+** runtime.
+- The **windows-bundle.zip** ships its own JRE 8 — extract and double-click, nothing else to install.
 
 ---
 
@@ -41,7 +44,8 @@ Pick the workflow that matches your client.
 Adds **"Oracle Fusion Cloud (BIP)"** as a dedicated entry in SQL Developer's *Database Type* dropdown, with a custom panel (Hostname, Report Path, Timeout).
 
 1. Download the installer for your OS:
-   - **Windows**: [`fusion-sqldev-installer-1.0.0.exe`](dist/fusion-sqldev-installer-1.0.0.exe) — double-click to run
+   - **Windows (no Java installed)**: [`fusion-sqldev-installer-1.0.0-windows-bundle.zip`](dist/fusion-sqldev-installer-1.0.0-windows-bundle.zip) — extract anywhere, double-click `fusion-sqldev-installer-1.0.0.exe` inside. Bundles its own JRE.
+   - **Windows (Java already installed)**: [`fusion-sqldev-installer-1.0.0.exe`](dist/fusion-sqldev-installer-1.0.0.exe) — double-click to run, uses the system JRE.
    - **macOS / Linux**: [`fusion-sqldev-installer-1.0.0.jar`](dist/fusion-sqldev-installer-1.0.0.jar) — `java -jar fusion-sqldev-installer-1.0.0.jar`
 2. A small GUI opens. Click **Install**.
 
