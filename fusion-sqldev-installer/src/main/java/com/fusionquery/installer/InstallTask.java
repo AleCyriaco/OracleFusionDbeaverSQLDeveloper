@@ -47,16 +47,21 @@ public class InstallTask {
         log.accept("User dir: " + userDir);
         Files.createDirectories(userDir);
 
+        // 1) Canonical standalone location used by DBeaver / DataGrip / IntelliJ
+        Path standaloneDir = platform.standaloneDir();
+        Files.createDirectories(standaloneDir);
+        Path standaloneDriver = standaloneDir.resolve(DRIVER_JAR);
+        Path standaloneExt = standaloneDir.resolve(EXTENSION_JAR);
+        copyBundledResource(DRIVER_JAR, standaloneDriver);
+        copyBundledResource(EXTENSION_JAR, standaloneExt);
+        log.accept("Created standalone folder: " + standaloneDir);
+
+        // 2) user_extensions copy of the extension (where SQL Developer scans)
         Path extDir = userDir.resolve(EXTENSIONS_DIR_NAME);
         Files.createDirectories(extDir);
-
         Path extTarget = extDir.resolve(EXTENSION_JAR);
         copyBundledResource(EXTENSION_JAR, extTarget);
         log.accept("Copied extension JAR -> " + extTarget);
-
-        Path driverTarget = extDir.resolve(DRIVER_JAR);
-        copyBundledResource(DRIVER_JAR, driverTarget);
-        log.accept("Copied driver JAR    -> " + driverTarget);
 
         if (detections.isEmpty()) {
             log.accept("No SQL Developer version directories found yet. The JARs are installed; "
@@ -68,19 +73,31 @@ public class InstallTask {
         for (SqlDevDetector.Detection d : detections) {
             log.accept("--- " + d + " ---");
             updateProductConf(d.productConf, extDir);
-            registerThirdPartyDriver(d, driverTarget);
+            // TPDRIVER points at the canonical standalone copy of the driver
+            registerThirdPartyDriver(d, standaloneDriver);
             clearCache(d.systemCache());
         }
 
         log.accept("");
         log.accept("Installation complete. Restart SQL Developer (Cmd+Q / File > Exit) and reopen it.");
         log.accept("The new connection type 'Oracle Fusion Cloud (BIP)' will appear in 'New Database Connection' > Database Type.");
+        log.accept("For DBeaver / DataGrip / IntelliJ point at: " + standaloneDriver);
     }
 
     public void uninstall() throws IOException {
         Path extDir = userDir.resolve(EXTENSIONS_DIR_NAME);
         Files.deleteIfExists(extDir.resolve(EXTENSION_JAR));
         Files.deleteIfExists(extDir.resolve(DRIVER_JAR));
+
+        Path standaloneDir = platform.standaloneDir();
+        Files.deleteIfExists(standaloneDir.resolve(EXTENSION_JAR));
+        Files.deleteIfExists(standaloneDir.resolve(DRIVER_JAR));
+        try {
+            if (Files.isDirectory(standaloneDir)
+                    && !Files.list(standaloneDir).findAny().isPresent()) {
+                Files.delete(standaloneDir);
+            }
+        } catch (IOException ignored) {}
         log.accept("Removed extension and driver JARs.");
 
         for (SqlDevDetector.Detection d : detections) {

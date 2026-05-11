@@ -7,9 +7,14 @@ This package contains both install paths. Pick whichever fits your client.
 | File                                  | Use for                                                              |
 |---------------------------------------|----------------------------------------------------------------------|
 | `fusion-query-jdbc-1.0.0.jar`         | Standalone driver (DBeaver, DataGrip, SQL Developer's JDBC tab)      |
-| `fusion-sqldev-installer-1.0.0.jar`   | Cross-platform installer for SQL Developer's native connection type  |
+| `fusion-sqldev-installer-1.0.0.exe`   | Windows installer — double-click to run                              |
+| `fusion-sqldev-installer-1.0.0.jar`   | Cross-platform installer (`java -jar ...`)                           |
 
 Requires **Java 8+**.
+
+The installer drops both JARs into a canonical folder for cross-tool use:
+- Windows: `%USERPROFILE%\Oracle\fusion-query-jdbc-1.0.0\`
+- macOS / Linux: `~/Oracle/fusion-query-jdbc-1.0.0/`
 
 ---
 

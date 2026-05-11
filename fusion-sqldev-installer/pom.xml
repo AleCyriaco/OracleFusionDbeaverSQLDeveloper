@@ -62,6 +62,46 @@
           </archive>
         </configuration>
       </plugin>
+
+      <!-- Wrap the runnable JAR as a Windows .exe (cross-platform build via Launch4j) -->
+      <plugin>
+        <groupId>com.akathist.maven.plugins.launch4j</groupId>
+        <artifactId>launch4j-maven-plugin</artifactId>
+        <version>2.5.2</version>
+        <executions>
+          <execution>
+            <id>launch4j-exe</id>
+            <phase>package</phase>
+            <goals><goal>launch4j</goal></goals>
+            <configuration>
+              <headerType>gui</headerType>
+              <outfile>${project.build.directory}/fusion-sqldev-installer-${project.version}.exe</outfile>
+              <jar>${project.build.directory}/fusion-sqldev-installer-${project.version}.jar</jar>
+              <dontWrapJar>false</dontWrapJar>
+              <errTitle>Fusion Query JDBC Installer</errTitle>
+              <classPath>
+                <mainClass>com.fusionquery.installer.Installer</mainClass>
+              </classPath>
+              <jre>
+                <minVersion>1.8.0</minVersion>
+                <jdkPreference>preferJre</jdkPreference>
+              </jre>
+              <versionInfo>
+                <fileVersion>1.0.0.0</fileVersion>
+                <txtFileVersion>1.0.0</txtFileVersion>
+                <fileDescription>Fusion Query JDBC installer for Oracle SQL Developer</fileDescription>
+                <copyright>2026 Ale Cyriaco</copyright>
+                <productVersion>1.0.0.0</productVersion>
+                <txtProductVersion>1.0.0</txtProductVersion>
+                <productName>Fusion Query JDBC</productName>
+                <internalName>fusion-sqldev-installer</internalName>
+                <originalFilename>fusion-sqldev-installer-1.0.0.exe</originalFilename>
+                <companyName>FusionQuery</companyName>
+              </versionInfo>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>

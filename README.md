@@ -15,7 +15,8 @@ Pre-built artifacts are in [`dist/`](dist/). Grab the release ZIP:
 | File                                  | Use for                                                              |
 |---------------------------------------|----------------------------------------------------------------------|
 | `fusion-query-jdbc-1.0.0.jar`         | Standalone JDBC driver (DBeaver, DataGrip, SQL Developer JDBC tab)   |
-| `fusion-sqldev-installer-1.0.0.jar`   | Cross-platform installer for SQL Developer's native connection type  |
+| `fusion-sqldev-installer-1.0.0.exe`   | Windows installer (double-click to run, no terminal required)        |
+| `fusion-sqldev-installer-1.0.0.jar`   | Cross-platform installer (`java -jar ...`)                           |
 | `README.md`                           | Bundled quick-start                                                  |
 
 You need **Java 8+** installed.
@@ -39,15 +40,13 @@ Pick the workflow that matches your client.
 
 Adds **"Oracle Fusion Cloud (BIP)"** as a dedicated entry in SQL Developer's *Database Type* dropdown, with a custom panel (Hostname, Report Path, Timeout).
 
-1. Download [`fusion-sqldev-installer-1.0.0.jar`](dist/fusion-sqldev-installer-1.0.0.jar).
-2. Run it (any OS — macOS, Linux, Windows):
-   ```bash
-   java -jar fusion-sqldev-installer-1.0.0.jar
-   ```
-   A small GUI opens. Click **Install**.
+1. Download the installer for your OS:
+   - **Windows**: [`fusion-sqldev-installer-1.0.0.exe`](dist/fusion-sqldev-installer-1.0.0.exe) — double-click to run
+   - **macOS / Linux**: [`fusion-sqldev-installer-1.0.0.jar`](dist/fusion-sqldev-installer-1.0.0.jar) — `java -jar fusion-sqldev-installer-1.0.0.jar`
+2. A small GUI opens. Click **Install**.
 
-   Headless / CI mode: `java -jar fusion-sqldev-installer-1.0.0.jar --cli`
-   Uninstall: `java -jar fusion-sqldev-installer-1.0.0.jar --cli --uninstall`
+   Headless / CI mode: `java -jar fusion-sqldev-installer-1.0.0.jar --cli` (or use the EXE with the same flag on Windows)
+   Uninstall: append `--uninstall`
 3. **Fully quit** SQL Developer (Cmd+Q on macOS, File → Exit on Windows/Linux — not just close window) and reopen.
 4. *File → New → Database Connection*. In **Database Type**, pick **Oracle Fusion Cloud (BIP)**.
 5. Fill in:
@@ -59,11 +58,13 @@ Adds **"Oracle Fusion Cloud (BIP)"** as a dedicated entry in SQL Developer's *Da
 
 **What the installer does** (transparent, all reversible):
 
-- Copies the extension JAR (with the embedded driver) to `<userdir>/user_extensions/`.
-- Adds a marked block in `<userdir>/<version>/product.conf` so SQL Developer scans that directory at boot.
+- Creates a canonical folder for the JARs: `%USERPROFILE%\Oracle\fusion-query-jdbc-1.0.0\` on Windows, `~/Oracle/fusion-query-jdbc-1.0.0/` on macOS/Linux. Both the driver and extension JARs land here — useful as a stable path for DBeaver / DataGrip / IntelliJ.
+- Copies the extension JAR to `<userdir>/user_extensions/` (where SQL Developer scans for extensions).
+- Adds a marked block in `<userdir>/<version>/product.conf` so SQL Developer loads the extension at boot.
+- Registers the driver JAR (from the canonical folder above) in SQL Developer's *Third Party JDBC Drivers* list automatically — no need to do *Tools → Preferences → Database → Third Party JDBC Drivers → Add Entry* manually.
 - Clears SQL Developer's module cache so the new bundle is picked up.
 
-The uninstall flag reverses all three steps.
+The uninstall flag reverses every step.
 
 SQL Developer user directory:
 

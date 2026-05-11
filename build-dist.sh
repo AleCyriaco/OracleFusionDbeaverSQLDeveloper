@@ -20,6 +20,7 @@ echo "[4/4] Assembling dist/"
 mkdir -p "$DIST"
 cp "$ROOT/fusion-query-jdbc/target/fusion-query-jdbc-1.0.0.jar"             "$DIST/"
 cp "$ROOT/fusion-sqldev-installer/target/fusion-sqldev-installer-1.0.0.jar" "$DIST/"
+cp "$ROOT/fusion-sqldev-installer/target/fusion-sqldev-installer-1.0.0.exe" "$DIST/"
 # README.md is maintained in dist/ directly
 
 # ZIP for release
@@ -27,6 +28,7 @@ cp "$ROOT/fusion-sqldev-installer/target/fusion-sqldev-installer-1.0.0.jar" "$DI
   && zip -q fusion-query-jdbc-1.0.0.zip \
     fusion-query-jdbc-1.0.0.jar \
     fusion-sqldev-installer-1.0.0.jar \
+    fusion-sqldev-installer-1.0.0.exe \
     README.md )
 
 echo

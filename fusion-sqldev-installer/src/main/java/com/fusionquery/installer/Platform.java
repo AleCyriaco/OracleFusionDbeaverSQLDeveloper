@@ -36,6 +36,24 @@ public enum Platform {
         }
     }
 
+    /**
+     * Canonical standalone location where the driver and extension JARs land
+     * for use by any JDBC client (DBeaver, DataGrip, etc.).
+     */
+    public Path standaloneDir() {
+        String home = System.getProperty("user.home");
+        switch (this) {
+            case WINDOWS:
+                String userProfile = System.getenv("USERPROFILE");
+                if (userProfile == null || userProfile.isEmpty()) userProfile = home;
+                return Paths.get(userProfile, "Oracle", "fusion-query-jdbc-1.0.0");
+            case MACOS:
+            case LINUX:
+            default:
+                return Paths.get(home, "Oracle", "fusion-query-jdbc-1.0.0");
+        }
+    }
+
     /** Common SQL Developer install locations to suggest in the UI. */
     public Path[] commonInstallPaths() {
         switch (this) {
