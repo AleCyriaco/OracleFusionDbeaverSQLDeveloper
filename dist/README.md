@@ -98,4 +98,4 @@ Translated Oracle codes:
 
 ---
 
-Full project source, build instructions, and architecture notes: https://github.com/AleCyriaco/oracle-fusion-skr
+Full project source, build instructions, and architecture notes: https://github.com/AleCyriaco/OracleFusionDbeaverSQLDeveloper
