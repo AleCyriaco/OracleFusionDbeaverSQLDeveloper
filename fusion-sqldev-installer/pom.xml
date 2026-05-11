@@ -79,6 +79,7 @@
               <jar>${project.build.directory}/fusion-sqldev-installer-${project.version}.jar</jar>
               <dontWrapJar>false</dontWrapJar>
               <errTitle>Fusion Query JDBC Installer</errTitle>
+              <manifest>${project.basedir}/src/main/resources/installer.manifest</manifest>
               <classPath>
                 <mainClass>com.fusionquery.installer.Installer</mainClass>
               </classPath>
