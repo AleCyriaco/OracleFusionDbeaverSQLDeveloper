@@ -63,7 +63,7 @@ public class FusionConnectionPanel extends IConnectionPanel {
     protected Properties getInput(Properties props) {
         if (props == null) props = new Properties();
         props.put("subtype", FusionConnectionCreator.SUBTYPE);
-        props.put("RaptorConnectionType", "FusionCloud");
+        props.put("RaptorConnectionType", FusionConnectionCreator.SUBTYPE);
         props.put("driver", FusionConnectionCreator.DRIVER_CLASS);
         String host = hostField.getText().trim();
         if (!host.isEmpty()) props.put(FusionConnectionCreator.PROP_HOST, host);
