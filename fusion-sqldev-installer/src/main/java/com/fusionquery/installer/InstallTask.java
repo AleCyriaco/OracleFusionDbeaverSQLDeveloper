@@ -126,10 +126,14 @@ public class InstallTask {
         List<String> filtered = removeManagedBlockLines(lines);
 
         String extDirStr = extDir.toAbsolutePath().toString();
+        String sep = File.pathSeparator;
         filtered.add("");
         filtered.add(CONF_MARKER_START);
         filtered.add("AddVMOption -Dide.bundle.search.path=" + extDirStr);
-        filtered.add("AddVMOption -Dide.extension.search.path=sqldeveloper/extensions:jdev/extensions:ide/extensions:" + extDirStr);
+        filtered.add("AddVMOption -Dide.extension.search.path=sqldeveloper/extensions"
+                + sep + "jdev/extensions"
+                + sep + "ide/extensions"
+                + sep + extDirStr);
         filtered.add(CONF_MARKER_END);
 
         Files.write(productConf, filtered, StandardCharsets.UTF_8);
