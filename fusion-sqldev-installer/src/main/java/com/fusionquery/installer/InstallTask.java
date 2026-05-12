@@ -31,15 +31,25 @@ public class InstallTask {
     private final Platform platform;
     private final Path userDir;
     private final List<SqlDevDetector.Detection> detections;
+    private final Path installDir;
     private final Consumer<String> log;
 
     public InstallTask(Platform platform, Path userDir,
                        List<SqlDevDetector.Detection> detections,
+                       Path installDir,
                        Consumer<String> log) {
         this.platform = platform;
         this.userDir = userDir;
         this.detections = detections;
+        this.installDir = installDir;
         this.log = log;
+    }
+
+    // Convenience for callers that don't have an install dir.
+    public InstallTask(Platform platform, Path userDir,
+                       List<SqlDevDetector.Detection> detections,
+                       Consumer<String> log) {
+        this(platform, userDir, detections, null, log);
     }
 
     public void install() throws IOException {
@@ -68,6 +78,22 @@ public class InstallTask {
                 + "launch SQL Developer once so it creates its config, then re-run the installer "
                 + "to enable the connection type and register the driver.");
             return;
+        }
+
+        // 3) Patch the install-dir launcher conf as the most reliable mechanism
+        // (the user-dir product.conf is read only by certain launcher variants;
+        // portable SQL Developer installs in particular skip it entirely).
+        Path resolvedInstallDir = installDir != null ? installDir : platform.findInstallDir();
+        if (resolvedInstallDir != null && Platform.looksLikeInstallDir(resolvedInstallDir)) {
+            Path launcherConf = Platform.launcherConf(resolvedInstallDir);
+            if (Files.isRegularFile(launcherConf)) {
+                updateLauncherConf(launcherConf, standaloneDir);
+                log.accept("Patched launcher conf: " + launcherConf);
+            } else {
+                log.accept("(install dir found but launcher conf missing: " + launcherConf + ")");
+            }
+        } else {
+            log.accept("(SQL Developer install dir not auto-detected — falling back to user-dir product.conf only)");
         }
 
         for (SqlDevDetector.Detection d : detections) {
@@ -105,6 +131,15 @@ public class InstallTask {
         } catch (IOException ignored) {}
         log.accept("Removed extension and driver JARs.");
 
+        Path resolvedInstallDir = installDir != null ? installDir : platform.findInstallDir();
+        if (resolvedInstallDir != null) {
+            Path launcherConf = Platform.launcherConf(resolvedInstallDir);
+            if (Files.isRegularFile(launcherConf)) {
+                removeManagedBlock(launcherConf);
+                log.accept("Cleaned launcher conf: " + launcherConf);
+            }
+        }
+
         for (SqlDevDetector.Detection d : detections) {
             removeManagedBlock(d.productConf);
             unregisterThirdPartyDriver(d);
@@ -121,6 +156,31 @@ public class InstallTask {
         }
     }
 
+    /**
+     * Patch the install dir's sqldeveloper.conf with the same managed block.
+     * This is the most reliable entry point — the launcher always reads it,
+     * even on portable installs where the user-dir product.conf is skipped.
+     */
+    private void updateLauncherConf(Path launcherConf, Path extDir) throws IOException {
+        List<String> lines = Files.readAllLines(launcherConf, StandardCharsets.UTF_8);
+        List<String> filtered = removeManagedBlockLines(lines);
+        appendManagedBlock(filtered, extDir);
+        Files.write(launcherConf, filtered, StandardCharsets.UTF_8);
+    }
+
+    private void appendManagedBlock(List<String> lines, Path extDir) {
+        String extDirStr = extDir.toAbsolutePath().toString();
+        String sep = File.pathSeparator;
+        lines.add("");
+        lines.add(CONF_MARKER_START);
+        lines.add("AddVMOption -Dide.bundle.search.path=" + extDirStr);
+        lines.add("AddVMOption -Dide.extension.search.path=sqldeveloper/extensions"
+                + sep + "jdev/extensions"
+                + sep + "ide/extensions"
+                + sep + extDirStr);
+        lines.add(CONF_MARKER_END);
+    }
+
     private void updateProductConf(Path productConf, Path extDir) throws IOException {
         if (!Files.isRegularFile(productConf)) {
             Files.createDirectories(productConf.getParent());
@@ -130,17 +190,7 @@ public class InstallTask {
         List<String> lines = Files.readAllLines(productConf, StandardCharsets.UTF_8);
         List<String> filtered = removeManagedBlockLines(lines);
 
-        String extDirStr = extDir.toAbsolutePath().toString();
-        String sep = File.pathSeparator;
-        filtered.add("");
-        filtered.add(CONF_MARKER_START);
-        filtered.add("AddVMOption -Dide.bundle.search.path=" + extDirStr);
-        filtered.add("AddVMOption -Dide.extension.search.path=sqldeveloper/extensions"
-                + sep + "jdev/extensions"
-                + sep + "ide/extensions"
-                + sep + extDirStr);
-        filtered.add(CONF_MARKER_END);
-
+        appendManagedBlock(filtered, extDir);
         Files.write(productConf, filtered, StandardCharsets.UTF_8);
         log.accept("Updated " + productConf);
     }
