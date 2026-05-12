@@ -33,6 +33,8 @@ WIN_BUNDLE_DIR="$ROOT/.build/fusion-sqldev-installer-1.0.0-windows"
 rm -rf "$WIN_BUNDLE_DIR"
 mkdir -p "$WIN_BUNDLE_DIR"
 cp "$ROOT/fusion-sqldev-installer/target/fusion-sqldev-installer-1.0.0.exe" "$WIN_BUNDLE_DIR/"
+cp "$ROOT/fusion-sqldev-installer/src/main/scripts/install.bat"   "$WIN_BUNDLE_DIR/"
+cp "$ROOT/fusion-sqldev-installer/src/main/scripts/uninstall.bat" "$WIN_BUNDLE_DIR/"
 cp -R "$WIN_JRE" "$WIN_BUNDLE_DIR/jre"
 ( cd "$ROOT/.build" && rm -f "$DIST/fusion-sqldev-installer-1.0.0-windows-bundle.zip" \
   && zip -qr "$DIST/fusion-sqldev-installer-1.0.0-windows-bundle.zip" \
