@@ -174,10 +174,15 @@ public class InstallTask {
         try {
             Document doc = loadOrCreatePrefs(prefs);
             Element list = ensureTpdriverList(doc);
-            String driverPath = driverJar.toAbsolutePath().toString();
+            // Encode as a file URI so the path is unambiguously absolute on
+            // every platform. Without the file:// prefix Windows backslash
+            // paths get parsed as relative URIs and end up appended to the
+            // product-preferences.xml location.
+            String driverPath = driverJar.toAbsolutePath().toUri().toString();
 
-            // Remove any stale entry that points at a different copy of our driver,
-            // then add the canonical one pointing at user_extensions/.
+            // Remove any stale entry that points at our driver (any path that
+            // ends in the canonical jar filename — covers historical absolute,
+            // relative, and file:// variants).
             NodeList urls = list.getElementsByTagName("url");
             for (int i = urls.getLength() - 1; i >= 0; i--) {
                 Element u = (Element) urls.item(i);
