@@ -179,11 +179,15 @@ public class InstallTask {
         try {
             Document doc = loadOrCreatePrefs(prefs);
             Element list = ensureTpdriverList(doc);
-            // Encode as a file URI so the path is unambiguously absolute on
-            // every platform. Without the file:// prefix Windows backslash
-            // paths get parsed as relative URIs and end up appended to the
-            // product-preferences.xml location.
-            String driverPath = driverJar.toAbsolutePath().toUri().toString();
+            // SQL Developer resolves <url path="..."> with new File(prefsDir,
+            // path), which converts absolute child paths to relative on
+            // Windows — meaning both raw 'C:\...' values and file:// URIs end
+            // up concatenated onto the product-preferences.xml location. The
+            // format SQL Developer's own preferences GUI writes is a
+            // relative-from-prefs path with forward slashes, so produce that.
+            Path prefsDir = prefs.getParent().toAbsolutePath();
+            String driverPath = prefsDir.relativize(driverJar.toAbsolutePath())
+                    .toString().replace('\\', '/');
 
             // Remove any stale entry that points at our driver (any path that
             // ends in the canonical jar filename — covers historical absolute,
