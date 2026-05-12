@@ -72,7 +72,12 @@ public class InstallTask {
 
         for (SqlDevDetector.Detection d : detections) {
             log.accept("--- " + d + " ---");
-            updateProductConf(d.productConf, extDir);
+            // Point search.path at the canonical Oracle\fusion-query-jdbc-1.0.0
+            // folder rather than user_extensions: on Windows the user dir is
+            // 'SQL Developer' (with a space) which breaks AddVMOption parsing
+            // — the launcher splits the value at the space. The canonical
+            // path under %USERPROFILE%\Oracle has no spaces.
+            updateProductConf(d.productConf, standaloneDir);
             // TPDRIVER points at the canonical standalone copy of the driver
             registerThirdPartyDriver(d, standaloneDriver);
             clearCache(d.systemCache());
