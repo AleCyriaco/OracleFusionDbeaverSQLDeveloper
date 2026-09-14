@@ -16,36 +16,40 @@ public class FusionConnection implements Connection {
 
     private String deployWarning;
 
-    public FusionConnection(FusionQueryClient client, String url, Properties info) {
+    public FusionConnection(FusionQueryClient client, String url, Properties info) throws SQLException {
         this.client = client;
         this.url = url;
-        this.info = info;
+        this.info = info == null ? new Properties() : info;
         autoDeploy();
     }
 
-    private void autoDeploy() {
-        try {
-            boolean isOcs = client.getBaseUrl().contains(".ocs.");
+    private void autoDeploy() throws SQLException {
+        // Test Connection and normal JDBC connect both run this preparation step.
+        String reportPath = info.getProperty("reportPath", "").trim();
+        client.setUseSoap(true);
+        if (reportPath.isEmpty()) {
             FusionCatalogService catalog = new FusionCatalogService(
                     client.getBaseUrl(), client.getUsername(),
                     client.getPassword(), client.getTimeoutMs());
-
-            if (isOcs) {
-                catalog.setUseSoap(true);
-                client.setUseSoap(true);
-            }
-
             FusionCatalogService.DeployResult result = catalog.ensureDeployed();
-            if (result.found && result.reportPath != null) {
-                client.setReportPath(result.reportPath);
-                if (result.wasInstalled) {
-                    deployWarning = "Proxy report deployed to: " + result.reportPath;
-                }
-            } else if (result.error != null) {
-                deployWarning = result.error;
+            if (!result.found || result.reportPath == null) {
+                throw new SQLNonTransientConnectionException(result.error, "08001");
             }
-        } catch (Exception e) {
-            deployWarning = "Auto-deploy failed: " + e.getMessage();
+            reportPath = result.reportPath;
+            if (result.wasInstalled) deployWarning = "Proxy report deployed to: " + reportPath;
+        }
+        // An explicit reportPath is used as-is; never create/replace a shared custom report.
+        client.setReportPath(reportPath);
+        QueryResult validation = client.query("SELECT 1 AS FUSION_QUERY_CHECK FROM DUAL", 1, 0);
+        if (validation.hasError()) {
+            throw new SQLNonTransientConnectionException("BI Publisher proxy validation failed at "
+                    + reportPath + ": " + validation.getError()
+                    + ". Check permission to run this report, read its data model and access its data source.", "08001");
+        }
+        if (validation.getRows().size() != 1
+                || !validation.getRows().get(0).containsValue("1")) {
+            throw new SQLNonTransientConnectionException("BI Publisher proxy at " + reportPath
+                    + " did not return the expected result for SELECT 1 FROM DUAL", "08001");
         }
     }
 
@@ -168,7 +172,7 @@ public class FusionConnection implements Connection {
     public void setSchema(String schema) {}
 
     @Override
-    public Map<String, Class<?>> getTypeMap() { return Map.of(); }
+    public Map<String, Class<?>> getTypeMap() { return java.util.Collections.emptyMap(); }
 
     @Override
     public void setTypeMap(Map<String, Class<?>> map) {}

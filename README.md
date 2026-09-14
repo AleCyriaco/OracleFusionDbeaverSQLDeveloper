@@ -153,7 +153,17 @@ jdbc:fusion://<user>:<password>@<host>          # credentials inline (URL-encode
 | `reportPath`  | no       | auto-deployed on first connect   | BI Publisher proxy report path                   |
 | `timeout`     | no       | `120`                            | HTTP timeout (seconds)                           |
 
-On first connect with no `reportPath`, the driver auto-deploys the proxy report under `/~<user>/FusionQuery/v1/csv.xdo`. OCI/OCS instances (anything with `.ocs.` in the hostname) automatically use SOAP transport.
+On Test Connection or a normal JDBC connection with no `reportPath` (or a blank value), the driver creates missing folders and objects under `/~<user>/FusionQuery/v1/`: `dm.xdm` and `csv.xdo`. It uses the documented SOAP v2 CatalogService on all Fusion hosts, uploads the model before the report, and fixes the report's model reference and archive metadata for the current user. Existing objects are reused; an interrupted installation is completed without overwriting existing objects. There is no automatic fallback to `/Custom/FusionQuery/Proxy/v1/csv.xdo`.
+
+Before returning a connection, the driver executes `SELECT 1 AS FUSION_QUERY_CHECK FROM DUAL` through the report over SOAP and checks the result. Catalog or execution failures are raised during connection setup with SQLState `08001`, including the path and the server's reason. The user must have permission to create Publisher folders, models and reports in My Folders and use the configured data source (`ApplicationDB_FSCM` in the bundled model).
+
+An explicit nonblank `reportPath` selects an existing proxy report. It is validated without creating or replacing catalog objects. Clear any old `reportPath` value in DBeaver to enable automatic setup.
+
+For DBeaver, keep **Use legacy JDBC instantiation** enabled with class `com.fusionquery.jdbc.FusionDriver`. When replacing the JAR, remove the old library entry, add the new JAR and reconnect (restart DBeaver if its driver classloader still holds the old version).
+
+The automatic setup tests use a local simulated Publisher server; they do not require Oracle credentials. Run `mvn -f fusion-query-jdbc/pom.xml test`. Tests cover initial setup, reconnect, incomplete installations, upload object types, patched archives, explicit paths, SOAP faults, missing objects after upload and report execution validation.
+
+API reference: [Oracle CatalogService](https://docs.oracle.com/middleware/12212/bip/BIPDV/catalogservice.htm).
 
 ---
 
@@ -218,7 +228,7 @@ Oracle errors are translated to friendlier messages:
 
 Requirements:
 
-- JDK 11+ (needed to build the SQL Developer extension; the driver and installer target Java 8 bytecode for maximum runtime compatibility)
+- JDK 17+ (needed to read the SQL Developer 24.3.1 APIs while building the extension; the driver and installer target Java 8 bytecode for maximum runtime compatibility)
 - Maven 3.6+
 - Oracle SQL Developer 24.3.1 installed locally (the build pulls JARs from the SQL Developer installation for compile-time `provided` dependencies)
 

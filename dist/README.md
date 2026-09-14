@@ -79,7 +79,13 @@ jdbc:fusion://<user>:<password>@<host>
 | `reportPath`  | no       | auto-deployed on first connect   |
 | `timeout`     | no       | `120` seconds                    |
 
-On first connect with no `reportPath`, the driver auto-deploys the proxy report to `/~<user>/FusionQuery/v1/csv.xdo`. OCI/OCS hosts (`.ocs.` in hostname) automatically use SOAP transport.
+On **Test Connection** or a normal JDBC connection with a blank `reportPath`, the driver creates missing folders, the data model `dm.xdm` and the report `csv.xdo` under `/~<user>/FusionQuery/v1/`. It reuses existing objects and completes interrupted installations without overwriting them. Catalog setup and connection validation use SOAP on all Fusion hosts.
+
+The connection succeeds only after the report returns the expected result from `SELECT 1 FROM DUAL`. Setup or execution failures report the path and server reason immediately. The Fusion user needs permission to create Publisher folders, data models and reports in My Folders and access the model's data source. The driver does not grant permissions or fall back to the shared `/Custom/FusionQuery/Proxy/v1/csv.xdo` report.
+
+If `reportPath` is explicitly set, that existing report is validated without creating catalog objects. **Clear an old `reportPath` value to enable automatic setup.**
+
+When upgrading DBeaver, replace the old JAR in **Driver Settings → Libraries**, keep **Use legacy JDBC instantiation** enabled and reconnect. Restart DBeaver if it still holds the old driver in memory.
 
 ---
 
@@ -99,7 +105,7 @@ Translated Oracle codes:
 - **Path A: "Oracle Fusion Cloud (BIP)" missing from dropdown** — Cmd+Q (full quit), then reopen. First boot after install takes ~10s longer (rebuilding cache).
 - **Path A: "creator is null" NPE** — extension didn't load. Re-run installer; ensure full quit; verify `<userdir>/user_extensions/fusion-sqldev-extension-1.0.0.jar` exists.
 - **Driver class not found** — class is exactly `com.fusionquery.jdbc.FusionDriver`.
-- **OCS host hangs** — driver auto-detects `.ocs.` and falls back to SOAP.
+- **Setup permission denied** — the connection error identifies the failed catalog operation. Ask the Fusion administrator to verify creation rights in My Folders and data source access.
 
 ---
 

@@ -5,17 +5,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 public class FusionSoapClient {
 
     private static final String REPORT_SERVICE_PATH = "/xmlpserver/services/v2/ReportService";
-    private static final Pattern REPORT_BYTES_PATTERN =
-            Pattern.compile("<reportBytes>([^<]+)</reportBytes>");
-    private static final Pattern FAULT_PATTERN =
-            Pattern.compile("<faultstring>([^<]+)</faultstring>");
 
     private final String baseUrl;
     private final String username;
@@ -35,46 +29,42 @@ public class FusionSoapClient {
 
         URL url = new URL(urlStr);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        conn.setDoOutput(true);
-        conn.setConnectTimeout(timeout);
-        conn.setReadTimeout(timeout);
-        conn.setRequestProperty("Content-Type", "text/xml; charset=utf-8");
-        conn.setRequestProperty("SOAPAction", "");
-        conn.setRequestProperty("Accept-Encoding", "gzip, deflate");
+        try {
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setInstanceFollowRedirects(false);
+            conn.setConnectTimeout(timeout);
+            conn.setReadTimeout(timeout);
+            conn.setRequestProperty("Content-Type", "text/xml; charset=utf-8");
+            conn.setRequestProperty("SOAPAction", "");
+            conn.setRequestProperty("Accept-Encoding", "gzip");
 
-        String auth = username + ":" + password;
-        conn.setRequestProperty("Authorization",
-                "Basic " + Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8)));
+            String auth = username + ":" + password;
+            conn.setRequestProperty("Authorization",
+                    "Basic " + Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8)));
 
-        byte[] payload = soapBody.getBytes(StandardCharsets.UTF_8);
-        conn.setFixedLengthStreamingMode(payload.length);
-        try (OutputStream os = conn.getOutputStream()) {
-            os.write(payload);
-        }
-
-        int status = conn.getResponseCode();
-        InputStream rawIs = (status >= 200 && status < 300) ? conn.getInputStream() : conn.getErrorStream();
-        InputStream is = wrapIfGzip(rawIs, conn.getContentEncoding());
-        String response = readStream(is);
-
-        if (status >= 400) {
-            Matcher faultMatcher = FAULT_PATTERN.matcher(response);
-            String msg;
-            if (faultMatcher.find()) {
-                msg = "SOAP Fault: " + faultMatcher.group(1);
-            } else {
-                msg = "SOAP HTTP " + status + ": "
-                        + (response.length() > 500 ? response.substring(0, 500) : response);
+            byte[] payload = soapBody.getBytes(StandardCharsets.UTF_8);
+            conn.setFixedLengthStreamingMode(payload.length);
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(payload);
             }
-            throw new IOException(msg);
-        }
 
-        Matcher m = REPORT_BYTES_PATTERN.matcher(response);
-        if (!m.find()) {
-            throw new IOException("No reportBytes in SOAP response");
+            int status = conn.getResponseCode();
+            InputStream rawIs = (status >= 200 && status < 300) ? conn.getInputStream() : conn.getErrorStream();
+            InputStream is = wrapIfGzip(rawIs, conn.getContentEncoding());
+            String response = readStream(is);
+
+            org.w3c.dom.Document document = SoapXml.parse(response);
+            SoapXml.checkFault(document);
+            if (status < 200 || status >= 300) throw new IOException("SOAP HTTP " + status);
+            String reportBytes = SoapXml.text(document, "reportBytes");
+            if (reportBytes == null) {
+                throw new IOException("No reportBytes in SOAP response");
+            }
+            return Base64.getDecoder().decode(reportBytes.replaceAll("\\s", ""));
+        } finally {
+            conn.disconnect();
         }
-        return Base64.getDecoder().decode(m.group(1));
     }
 
     private String buildRunReportEnvelope(String reportPath, String encodedSql) {

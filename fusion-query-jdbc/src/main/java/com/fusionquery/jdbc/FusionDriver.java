@@ -77,6 +77,7 @@ public class FusionDriver implements Driver {
 
     @Override
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) {
+        if (info == null) info = new Properties();
         DriverPropertyInfo userProp = new DriverPropertyInfo("user", info.getProperty("user"));
         userProp.required = true;
         userProp.description = "Oracle Fusion Cloud username";
@@ -86,9 +87,9 @@ public class FusionDriver implements Driver {
         passProp.description = "Oracle Fusion Cloud password";
 
         DriverPropertyInfo reportProp = new DriverPropertyInfo("reportPath",
-                info.getProperty("reportPath", "/Custom/FusionQuery/Proxy/v1/csv.xdo"));
+                info.getProperty("reportPath"));
         reportProp.required = false;
-        reportProp.description = "BI Publisher proxy report path";
+        reportProp.description = "Optional existing proxy report. Leave blank to create/verify the proxy in My Folders on connect.";
 
         DriverPropertyInfo timeoutProp = new DriverPropertyInfo("timeout",
                 info.getProperty("timeout", "120"));
