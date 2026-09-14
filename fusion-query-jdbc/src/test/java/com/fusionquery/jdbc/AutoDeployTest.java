@@ -19,6 +19,9 @@ public class AutoDeployTest {
     private final Set<String> objects = new HashSet<>();
     private final Map<String, byte[]> uploads = new HashMap<>();
     private final List<String> calls = new ArrayList<>();
+    private final List<String> uploadTypes = new ArrayList<>();
+    private boolean requireArchiveTypes;
+    private boolean denyArchiveUpload;
     private String failOperation;
     private String failPath;
     private int faultStatus = 500;
@@ -69,6 +72,7 @@ public class AutoDeployTest {
             if (path == null) path = SoapXml.text(request, "reportObjectAbsolutePathURL");
             if (path == null) path = SoapXml.text(request, "reportAbsolutePath");
             calls.add(operation + " " + path);
+            if (operation.equals("uploadObject")) uploadTypes.add(SoapXml.text(request, "objectType"));
             if (operation.equals(failOperation) && (failPath == null || failPath.equals(path))) {
                 fault(exchange, faultStatus, faultMessage);
                 return;
@@ -86,7 +90,19 @@ public class AutoDeployTest {
                 value = path;
             } else if (operation.equals("uploadObject")) {
                 assertTrue(objects.contains(path.substring(0, path.lastIndexOf('/'))));
-                assertEquals(path.endsWith(".xdm") ? "xdm" : "xdo", SoapXml.text(request, "objectType"));
+                String type = SoapXml.text(request, "objectType");
+                String baseType = path.endsWith(".xdm") ? "xdm" : "xdo";
+                if (requireArchiveTypes && type.equals(baseType)) {
+                    fault(exchange, faultStatus, "PublicReportServiceImpl::executeUploadReport Failure: "
+                            + "due to unsupported Report Object's type - [" + type
+                            + "]. Only support types - xdoz / xdmz / xssz /  / xmaz / xsbzxdrz.");
+                    return;
+                }
+                assertEquals(requireArchiveTypes ? baseType + "z" : baseType, type);
+                if (denyArchiveUpload) {
+                    fault(exchange, 500, "Permission denied for archive upload");
+                    return;
+                }
                 byte[] archive = Base64.getDecoder().decode(SoapXml.text(request, "objectZippedData"));
                 assertTrue(unzip(archive).size() > 0);
                 uploads.put(path, archive);
@@ -147,6 +163,7 @@ public class AutoDeployTest {
         try (FusionConnection connection = connect(null)) {
             assertEquals(REPORT, lastReportPath);
             assertEquals(2, uploads.size());
+            assertEquals(Arrays.asList("xdm", "xdo"), uploadTypes);
             assertNotNull(connection.getWarnings());
             Map<String, String> report = unzip(uploads.get(REPORT));
             assertTrue(report.get("_report.xdo").contains("url=\"" + MODEL + "\""));
@@ -198,6 +215,42 @@ public class AutoDeployTest {
         assertTrue(error.getMessage().contains("Permission denied"));
         assertNull(lastReportPath);
         assertFalse(calls.toString().contains("/Custom/"));
+        assertEquals(Collections.singletonList("xdm"), uploadTypes);
+    }
+
+    @Test public void archiveOnlyServerCreatesModelAndReport() throws Exception {
+        requireArchiveTypes = true;
+        connect(null).close();
+        assertEquals(Arrays.asList("xdm", "xdmz", "xdo", "xdoz"), uploadTypes);
+        assertEquals(2, uploads.size());
+        assertEquals(REPORT, lastReportPath);
+        assertTrue(unzip(uploads.get(REPORT)).get("_report.xdo").contains("url=\"" + MODEL + "\""));
+        uploadTypes.clear();
+        connect(null).close();
+        assertTrue("Reconnect must not upload existing objects", uploadTypes.isEmpty());
+    }
+
+    @Test public void archiveOnlyHttp200FaultRetriesSupportedType() throws Exception {
+        requireArchiveTypes = true;
+        faultStatus = 200;
+        connect(null).close();
+        assertEquals(Arrays.asList("xdm", "xdmz", "xdo", "xdoz"), uploadTypes);
+        assertEquals(REPORT, lastReportPath);
+    }
+
+    @Test public void permissionFailureOnArchiveRetryStopsImmediately() throws Exception {
+        requireArchiveTypes = true;
+        denyArchiveUpload = true;
+        assertTrue(expectFailure().getMessage().contains("Permission denied for archive upload"));
+        assertEquals(Arrays.asList("xdm", "xdmz"), uploadTypes);
+        assertNull(lastReportPath);
+    }
+
+    @Test public void unsupportedTypeWithoutSupportedArchiveDoesNotRetry() throws Exception {
+        failOperation = "uploadObject";
+        faultMessage = "unsupported Report Object's type - [xdm]. Only support types - xdoz";
+        assertTrue(expectFailure().getMessage().contains("unsupported Report Object's type"));
+        assertEquals(Collections.singletonList("xdm"), uploadTypes);
     }
 
     @Test public void http200SoapFaultIsNotSuccess() throws Exception {

@@ -87,6 +87,10 @@ If `reportPath` is explicitly set, that existing report is validated without cre
 
 When upgrading DBeaver, replace the old JAR in **Driver Settings → Libraries**, keep **Use legacy JDBC instantiation** enabled and reconnect. Restart DBeaver if it still holds the old driver in memory.
 
+### Upload compatibility across Fusion environments
+
+The driver supports Publisher servers accepting `xdm`/`xdo` and servers requiring `xdmz`/`xdoz`. If upload explicitly rejects the documented object type and lists the archive type as supported, it retries once using that archive type. Catalog paths remain `dm.xdm` and `csv.xdo`. Authentication and permission errors do not trigger this retry.
+
 ---
 
 ## Errors

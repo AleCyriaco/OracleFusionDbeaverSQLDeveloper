@@ -166,6 +166,10 @@ For DBeaver, keep **Use legacy JDBC instantiation** enabled with class `com.fusi
 
 The automatic setup tests use a local simulated Publisher server; they do not require Oracle credentials. Run `mvn -f fusion-query-jdbc/pom.xml test`. Tests cover initial setup, reconnect, incomplete installations, upload object types, patched archives, explicit paths, SOAP faults, missing objects after upload and report execution validation.
 
+### Upload compatibility across Fusion environments
+
+The driver supports Publisher servers accepting `xdm`/`xdo` and servers requiring `xdmz`/`xdoz`. If upload explicitly rejects the documented object type and lists the archive type as supported, it retries once using that archive type. Catalog paths remain `dm.xdm` and `csv.xdo`. Authentication and permission errors do not trigger this retry.
+
 API reference: [Oracle CatalogService](https://docs.oracle.com/middleware/12212/bip/BIPDV/catalogservice.htm).
 
 ---

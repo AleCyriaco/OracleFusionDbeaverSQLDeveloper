@@ -6,6 +6,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -85,12 +86,31 @@ public class FusionCatalogService {
     private void uploadIfMissing(String path, byte[] content, String type) throws IOException {
         if (objectExists(path)) return;
         try {
-            call("uploadObject", element("reportObjectAbsolutePathURL", path)
-                    + element("objectType", type)
-                    + element("objectZippedData", Base64.getEncoder().encodeToString(content)));
+            try {
+                uploadObject(path, content, type);
+            } catch (IOException failure) {
+                // Some Fusion pods require the archive type despite the v2 API documenting xdm/xdo.
+                // Retry only an explicit type rejection, never authentication or permission failures.
+                if (!requiresArchiveType(failure, type)) throw failure;
+                uploadObject(path, content, type + "z");
+            }
         } catch (IOException failure) {
             if (!existsAfterFailure(path)) throw new IOException("Uploading " + path + ": " + safeMessage(failure), failure);
         }
+    }
+
+    private void uploadObject(String path, byte[] content, String type) throws IOException {
+        call("uploadObject", element("reportObjectAbsolutePathURL", path)
+                + element("objectType", type)
+                + element("objectZippedData", Base64.getEncoder().encodeToString(content)));
+    }
+
+    private static boolean requiresArchiveType(IOException error, String type) {
+        if (!"xdm".equals(type) && !"xdo".equals(type)) return false;
+        String message = String.valueOf(error.getMessage()).toLowerCase(Locale.ROOT);
+        return message.contains("unsupported report object's type")
+                && message.contains("[" + type + "]")
+                && message.contains(type + "z");
     }
 
     private boolean existsAfterFailure(String path) {
