@@ -6,23 +6,26 @@ The driver tunnels SQL queries through a BI Publisher data model proxy that the 
 
 ---
 
-## Download
+## Downloads diretos — 2027
 
-Pre-built artifacts are in [`dist/`](dist/). Grab the release ZIP:
+**Baixe aqui o driver atualizado, com criação automática do relatório e do modelo de dados no teste de conexão.** Versão do driver: **1.0.0**.
 
-[**fusion-query-jdbc-1.0.0.zip**](dist/fusion-query-jdbc-1.0.0.zip) — contains:
+| Plataforma / uso | Download direto | Requisito |
+|---|---|---|
+| **Windows x86 — 32 bits · DBeaver / JDBC** | **[⬇ BAIXAR DRIVER PARA WINDOWS x86 (.JAR)](https://raw.githubusercontent.com/AleCyriaco/OracleFusionDbeaverSQLDeveloper/main/dist/fusion-query-jdbc-1.0.0.jar)** | Cliente JDBC e Java 8+ compatíveis com Windows 32 bits |
+| **Windows x64 — 64 bits · DBeaver / JDBC** | **[⬇ BAIXAR DRIVER PARA WINDOWS x64 (.JAR)](https://raw.githubusercontent.com/AleCyriaco/OracleFusionDbeaverSQLDeveloper/main/dist/fusion-query-jdbc-1.0.0.jar)** | Cliente JDBC e Java 8+ compatíveis com Windows 64 bits |
+| **Windows x64 · instalador para SQL Developer, com Java incluído** | **[⬇ BAIXAR INSTALADOR WINDOWS x64 + JAVA (.ZIP)](https://raw.githubusercontent.com/AleCyriaco/OracleFusionDbeaverSQLDeveloper/main/dist/fusion-sqldev-installer-1.0.0-windows-bundle.zip)** | Extrair o ZIP e executar o instalador; inclui Java 8 x64 |
 
-| File                                                          | Use for                                                                          |
-|---------------------------------------------------------------|----------------------------------------------------------------------------------|
-| `fusion-query-jdbc-1.0.0.jar`                                 | Standalone JDBC driver (DBeaver, DataGrip, SQL Developer JDBC tab)               |
-| `fusion-sqldev-installer-1.0.0-windows-bundle.zip` (~39 MB)   | Windows installer **with bundled JRE** — no Java required                        |
-| `fusion-sqldev-installer-1.0.0.exe` (~750 KB)                 | Windows installer (lean — needs an existing Java 8+ JRE/JDK)                     |
-| `fusion-sqldev-installer-1.0.0.jar` (~685 KB)                 | Cross-platform installer (`java -jar ...`, needs Java 8+ installed)              |
-| `README.md`                                                   | Bundled quick-start                                                              |
+**No DBeaver:** adicione o JAR em **Driver Settings → Libraries**, mantenha **Use legacy JDBC instantiation** marcado e deixe **reportPath vazio**. Depois clique em **Test Connection**.
 
-Java requirement:
-- *Lean* installers need an existing **Java 8+** runtime.
-- The **windows-bundle.zip** ships its own JRE 8 — extract and double-click, nothing else to install.
+O driver JDBC é Java e usa **o mesmo JAR em x86 e x64**; a arquitetura depende do Java e do cliente SQL utilizados. O pacote Windows com Java incluído é **somente x64** e não deve ser usado no Windows 32 bits. O instalador para SQL Developer pressupõe que o SQL Developer já esteja instalado.
+
+### Outros downloads
+
+- [Pacote com driver JDBC, instaladores JAR/EXE e instruções (.ZIP)](https://raw.githubusercontent.com/AleCyriaco/OracleFusionDbeaverSQLDeveloper/main/dist/fusion-query-jdbc-1.0.0.zip).
+- [Instalador Windows para SQL Developer, sem Java incluído (.EXE)](https://raw.githubusercontent.com/AleCyriaco/OracleFusionDbeaverSQLDeveloper/main/dist/fusion-sqldev-installer-1.0.0.exe) — requer Java 8+ x64 instalado.
+- [Instalador Java para SQL Developer (.JAR)](https://raw.githubusercontent.com/AleCyriaco/OracleFusionDbeaverSQLDeveloper/main/dist/fusion-sqldev-installer-1.0.0.jar) — requer Java 8+ instalado.
+- [Ver todos os arquivos em `dist/`](dist/).
 
 ---
 
