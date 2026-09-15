@@ -59,9 +59,13 @@ public class InstallTask {
 
         Path standaloneDir = platform.standaloneDir();
         Path extDir = userDir.resolve(EXTENSIONS_DIR_NAME);
+        Path resolvedInstallDir = installDir != null ? installDir : platform.findInstallDir();
+        boolean haveInstallDir = resolvedInstallDir != null && Platform.looksLikeInstallDir(resolvedInstallDir);
+        Path sqldevExtensionsDir = haveInstallDir ? Platform.extensionsDir(resolvedInstallDir) : null;
         assertNotLocked(standaloneDir.resolve(DRIVER_JAR),
                         standaloneDir.resolve(EXTENSION_JAR),
-                        extDir.resolve(EXTENSION_JAR));
+                        extDir.resolve(EXTENSION_JAR),
+                        sqldevExtensionsDir != null ? sqldevExtensionsDir.resolve(EXTENSION_JAR) : null);
 
         // 1) Canonical standalone location used by DBeaver / DataGrip / IntelliJ
         Files.createDirectories(standaloneDir);
@@ -84,11 +88,19 @@ public class InstallTask {
             return;
         }
 
-        // 3) Patch the install-dir launcher conf as the most reliable mechanism
-        // (the user-dir product.conf is read only by certain launcher variants;
-        // portable SQL Developer installs in particular skip it entirely).
-        Path resolvedInstallDir = installDir != null ? installDir : platform.findInstallDir();
-        if (resolvedInstallDir != null && Platform.looksLikeInstallDir(resolvedInstallDir)) {
+        // 3) Install into the install dir: the extension JAR goes into
+        // sqldeveloper/extensions (the directory SQL Developer always scans,
+        // where Oracle's own extensions live) and the launcher conf gets an
+        // AddJavaLibFile for the driver. No ide.*.search.path overrides —
+        // replacing ide.bundle.search.path made the OSGi boot of newer
+        // SQL Developer versions exit silently before creating the system dir.
+        if (haveInstallDir) {
+            if (Files.isDirectory(sqldevExtensionsDir)) {
+                copyBundledResource(EXTENSION_JAR, sqldevExtensionsDir.resolve(EXTENSION_JAR));
+                log.accept("Copied extension JAR -> " + sqldevExtensionsDir.resolve(EXTENSION_JAR));
+            } else {
+                log.accept("(extensions dir missing, skipping copy: " + sqldevExtensionsDir + ")");
+            }
             Path launcherConf = Platform.launcherConf(resolvedInstallDir);
             if (Files.isRegularFile(launcherConf)) {
                 updateLauncherConf(launcherConf, standaloneDir);
@@ -122,10 +134,14 @@ public class InstallTask {
     public void uninstall() throws IOException {
         Path extDir = userDir.resolve(EXTENSIONS_DIR_NAME);
         Path standaloneDir = platform.standaloneDir();
+        Path resolvedInstallDir = installDir != null ? installDir : platform.findInstallDir();
+        Path sqldevExtensionsDir = resolvedInstallDir != null
+                ? Platform.extensionsDir(resolvedInstallDir) : null;
         assertNotLocked(extDir.resolve(EXTENSION_JAR),
                         extDir.resolve(DRIVER_JAR),
                         standaloneDir.resolve(EXTENSION_JAR),
-                        standaloneDir.resolve(DRIVER_JAR));
+                        standaloneDir.resolve(DRIVER_JAR),
+                        sqldevExtensionsDir != null ? sqldevExtensionsDir.resolve(EXTENSION_JAR) : null);
 
         Files.deleteIfExists(extDir.resolve(EXTENSION_JAR));
         Files.deleteIfExists(extDir.resolve(DRIVER_JAR));
@@ -139,8 +155,10 @@ public class InstallTask {
         } catch (IOException ignored) {}
         log.accept("Removed extension and driver JARs.");
 
-        Path resolvedInstallDir = installDir != null ? installDir : platform.findInstallDir();
         if (resolvedInstallDir != null) {
+            if (sqldevExtensionsDir != null) {
+                Files.deleteIfExists(sqldevExtensionsDir.resolve(EXTENSION_JAR));
+            }
             Path launcherConf = Platform.launcherConf(resolvedInstallDir);
             if (Files.isRegularFile(launcherConf)) {
                 removeManagedBlock(launcherConf);
@@ -166,7 +184,7 @@ public class InstallTask {
      */
     private void assertNotLocked(Path... targets) throws IOException {
         for (Path target : targets) {
-            if (!Files.isRegularFile(target)) continue;
+            if (target == null || !Files.isRegularFile(target)) continue;
             // WRITE alone opens without truncating: the open itself is the test.
             try (OutputStream probe = Files.newOutputStream(target, StandardOpenOption.WRITE)) {
                 // not locked
@@ -200,15 +218,13 @@ public class InstallTask {
     }
 
     private void appendManagedBlock(List<String> lines, Path extDir) {
-        String extDirStr = extDir.toAbsolutePath().toString();
-        String sep = File.pathSeparator;
+        // Forward slashes: the conf format prefers them even on Windows, and
+        // the canonical dir under %USERPROFILE%\Oracle contains no spaces.
+        String driverJar = extDir.toAbsolutePath().resolve(DRIVER_JAR)
+                .toString().replace('\\', '/');
         lines.add("");
         lines.add(CONF_MARKER_START);
-        lines.add("AddVMOption -Dide.bundle.search.path=" + extDirStr);
-        lines.add("AddVMOption -Dide.extension.search.path=sqldeveloper/extensions"
-                + sep + "jdev/extensions"
-                + sep + "ide/extensions"
-                + sep + extDirStr);
+        lines.add("AddJavaLibFile " + driverJar);
         lines.add(CONF_MARKER_END);
     }
 

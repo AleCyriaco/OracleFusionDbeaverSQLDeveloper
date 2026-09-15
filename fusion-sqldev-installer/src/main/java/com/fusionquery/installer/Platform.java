@@ -102,6 +102,11 @@ public enum Platform {
         return installDir.resolve("sqldeveloper").resolve("bin").resolve("sqldeveloper.conf");
     }
 
+    /** The extensions directory SQL Developer scans at startup. */
+    public static Path extensionsDir(Path installDir) {
+        return installDir.resolve("sqldeveloper").resolve("extensions");
+    }
+
     /** Common SQL Developer install locations to probe / suggest in the UI. */
     public Path[] commonInstallPaths() {
         String home = System.getProperty("user.home");
@@ -124,6 +129,7 @@ public enum Platform {
                     Paths.get(userProfile, "sqldeveloper"),
                     Paths.get(programFiles, "sqldeveloper"),
                     Paths.get(programFilesX86, "sqldeveloper"),
+                    Paths.get("C:\\Oracle\\sqldeveloper"),
                     Paths.get("C:\\sqldeveloper"),
                     Paths.get("D:\\sqldeveloper")
                 };
