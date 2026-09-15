@@ -10,6 +10,21 @@ The driver tunnels SQL queries through a BI Publisher data model proxy that the 
 
 **Baixe aqui o driver atualizado, com criação automática do relatório e do modelo de dados no teste de conexão.** Versão do driver: **1.0.0**.
 
+### Instalação em uma linha (Windows)
+
+Abra o **PowerShell** e rode:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/AleCyriaco/OracleFusionDbeaverSQLDeveloper/main/bootstrap.ps1)))
+```
+
+O script pergunta se você quer instalar para **Oracle SQL Developer** ou **DBeaver / outro cliente JDBC**, baixa o que for necessário e conclui a instalação (no SQL Developer, usando o JDK embutido da própria instalação — não precisa de Java no PATH). Parâmetros opcionais para pular as perguntas:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/AleCyriaco/OracleFusionDbeaverSQLDeveloper/main/bootstrap.ps1))) -Client sqldeveloper -SqlDevDir 'C:\Oracle\sqldeveloper'
+```
+
+
 | Plataforma / uso | Download direto | Requisito |
 |---|---|---|
 | **Windows x86 — 32 bits · DBeaver / JDBC** | **[⬇ BAIXAR DRIVER PARA WINDOWS x86 (.JAR)](https://raw.githubusercontent.com/AleCyriaco/OracleFusionDbeaverSQLDeveloper/main/dist/fusion-query-jdbc-1.0.0.jar)** | Cliente JDBC e Java 8+ compatíveis com Windows 32 bits |
