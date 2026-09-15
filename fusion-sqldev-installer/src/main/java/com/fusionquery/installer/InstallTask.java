@@ -57,8 +57,13 @@ public class InstallTask {
         log.accept("User dir: " + userDir);
         Files.createDirectories(userDir);
 
-        // 1) Canonical standalone location used by DBeaver / DataGrip / IntelliJ
         Path standaloneDir = platform.standaloneDir();
+        Path extDir = userDir.resolve(EXTENSIONS_DIR_NAME);
+        assertNotLocked(standaloneDir.resolve(DRIVER_JAR),
+                        standaloneDir.resolve(EXTENSION_JAR),
+                        extDir.resolve(EXTENSION_JAR));
+
+        // 1) Canonical standalone location used by DBeaver / DataGrip / IntelliJ
         Files.createDirectories(standaloneDir);
         Path standaloneDriver = standaloneDir.resolve(DRIVER_JAR);
         Path standaloneExt = standaloneDir.resolve(EXTENSION_JAR);
@@ -67,7 +72,6 @@ public class InstallTask {
         log.accept("Created standalone folder: " + standaloneDir);
 
         // 2) user_extensions copy of the extension (where SQL Developer scans)
-        Path extDir = userDir.resolve(EXTENSIONS_DIR_NAME);
         Files.createDirectories(extDir);
         Path extTarget = extDir.resolve(EXTENSION_JAR);
         copyBundledResource(EXTENSION_JAR, extTarget);
@@ -117,10 +121,14 @@ public class InstallTask {
 
     public void uninstall() throws IOException {
         Path extDir = userDir.resolve(EXTENSIONS_DIR_NAME);
+        Path standaloneDir = platform.standaloneDir();
+        assertNotLocked(extDir.resolve(EXTENSION_JAR),
+                        extDir.resolve(DRIVER_JAR),
+                        standaloneDir.resolve(EXTENSION_JAR),
+                        standaloneDir.resolve(DRIVER_JAR));
+
         Files.deleteIfExists(extDir.resolve(EXTENSION_JAR));
         Files.deleteIfExists(extDir.resolve(DRIVER_JAR));
-
-        Path standaloneDir = platform.standaloneDir();
         Files.deleteIfExists(standaloneDir.resolve(EXTENSION_JAR));
         Files.deleteIfExists(standaloneDir.resolve(DRIVER_JAR));
         try {
@@ -147,6 +155,29 @@ public class InstallTask {
             log.accept("Cleaned " + d);
         }
         log.accept("Uninstall complete.");
+    }
+
+    /**
+     * Windows keeps a JAR that a running SQL Developer has loaded open without
+     * sharing write access, so replacing it fails — historically halfway
+     * through the install, leaving the JARs copied but nothing registered.
+     * Probe every JAR we are about to replace before touching anything and
+     * stop with an actionable message instead.
+     */
+    private void assertNotLocked(Path... targets) throws IOException {
+        for (Path target : targets) {
+            if (!Files.isRegularFile(target)) continue;
+            // WRITE alone opens without truncating: the open itself is the test.
+            try (OutputStream probe = Files.newOutputStream(target, StandardOpenOption.WRITE)) {
+                // not locked
+            } catch (IOException e) {
+                throw new IOException(
+                    "SQL Developer still seems to be running — Windows will not let the "
+                    + "installer replace a JAR it has open:\n  " + target
+                    + "\nQuit SQL Developer completely (File > Exit, then check Task Manager "
+                    + "for a leftover javaw.exe) and run the installer again.", e);
+            }
+        }
     }
 
     private void copyBundledResource(String resourceName, Path target) throws IOException {
