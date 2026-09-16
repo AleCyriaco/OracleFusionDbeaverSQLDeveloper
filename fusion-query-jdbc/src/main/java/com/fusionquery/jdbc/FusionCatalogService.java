@@ -172,10 +172,12 @@ public class FusionCatalogService {
                     throw new IOException(operation + " received an HTML page (HTTP " + status
                             + ") instead of SOAP from " + CATALOG_SOAP
                             + " — usually the SSO sign-in page, meaning the username or password"
-                            + " was rejected. Check the credentials in the connection.", invalidXml);
+                            + " was rejected. Check the credentials in the connection."
+                            + responseDiagnostics(conn, status, body), invalidXml);
                 }
                 throw new IOException(operation + " returned HTTP " + status
-                        + " without a valid SOAP response from " + CATALOG_SOAP, invalidXml);
+                        + " without a valid SOAP response from " + CATALOG_SOAP
+                        + responseDiagnostics(conn, status, body), invalidXml);
             }
             SoapXml.checkFault(document);
             if (status < 200 || status >= 300) {
@@ -190,6 +192,29 @@ public class FusionCatalogService {
         } finally {
             conn.disconnect();
         }
+    }
+
+    /**
+     * What actually came back, so a failure can be diagnosed from the message
+     * alone: status, content type, a short body excerpt, any JVM proxy
+     * settings (SQL Developer applies its proxy preferences to the whole JVM,
+     * DBeaver does not), and the driver build.
+     */
+    private static String responseDiagnostics(HttpURLConnection conn, int status, String body) {
+        String excerpt = body.replaceAll("\\s+", " ");
+        if (excerpt.length() > 200) excerpt = excerpt.substring(0, 200) + "...";
+        StringBuilder sb = new StringBuilder();
+        sb.append(" [http=").append(status)
+          .append(" content-type=").append(conn.getContentType())
+          .append(" length=").append(body.length())
+          .append(" body=\"").append(excerpt).append('"');
+        String[] proxyKeys = {"https.proxyHost", "http.proxyHost", "java.net.useSystemProxies"};
+        for (String key : proxyKeys) {
+            String value = System.getProperty(key);
+            if (value != null && !value.isEmpty()) sb.append(' ').append(key).append('=').append(value);
+        }
+        sb.append(" driver=").append(FusionDriver.BUILD).append(']');
+        return sb.toString();
     }
 
     private String safeMessage(Exception error) {

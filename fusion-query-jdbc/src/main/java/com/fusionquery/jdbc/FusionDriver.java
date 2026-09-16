@@ -13,6 +13,8 @@ import java.util.logging.Logger;
 public class FusionDriver implements Driver {
 
     public static final String URL_PREFIX = "jdbc:fusion://";
+    /** Shown in diagnostics so a stale cached copy of the driver is recognisable. */
+    public static final String BUILD = "1.0.0-b20260916.4";
     private static final int MAJOR_VERSION = 1;
     private static final int MINOR_VERSION = 0;
 
