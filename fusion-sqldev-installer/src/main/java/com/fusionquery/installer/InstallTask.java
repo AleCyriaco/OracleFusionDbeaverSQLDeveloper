@@ -101,6 +101,7 @@ public class InstallTask {
             } else {
                 log.accept("(extensions dir missing, skipping copy: " + sqldevExtensionsDir + ")");
             }
+            registerInBundlesInfo(resolvedInstallDir);
             Path launcherConf = Platform.launcherConf(resolvedInstallDir);
             if (Files.isRegularFile(launcherConf)) {
                 updateLauncherConf(launcherConf, standaloneDir);
@@ -159,6 +160,11 @@ public class InstallTask {
             if (sqldevExtensionsDir != null) {
                 Files.deleteIfExists(sqldevExtensionsDir.resolve(EXTENSION_JAR));
             }
+            Path bundlesInfo = Platform.bundlesInfo(resolvedInstallDir);
+            if (Files.isRegularFile(bundlesInfo)) {
+                removeManagedBlock(bundlesInfo);
+                log.accept("Cleaned bundle registration in " + bundlesInfo);
+            }
             Path launcherConf = Platform.launcherConf(resolvedInstallDir);
             if (Files.isRegularFile(launcherConf)) {
                 removeManagedBlock(launcherConf);
@@ -196,6 +202,29 @@ public class InstallTask {
                     + "for a leftover javaw.exe) and run the installer again.", e);
             }
         }
+    }
+
+    /**
+     * SQL Developer's OSGi boot (OracleIdeLauncher + equinox simpleconfigurator)
+     * only loads bundles listed in configuration/bundles.info — a JAR dropped
+     * into sqldeveloper/extensions is ignored until it appears there. Verified
+     * against 26.2.0.186.2220: with this line present the bundle is resolved
+     * and its embedded driver extracted into the netigso cache; '#' marker
+     * comments are tolerated by the parser.
+     */
+    private void registerInBundlesInfo(Path installDir) throws IOException {
+        Path bundlesInfo = Platform.bundlesInfo(installDir);
+        if (!Files.isRegularFile(bundlesInfo)) {
+            log.accept("(no configuration/bundles.info — pre-OSGi SQL Developer, list registration not needed)");
+            return;
+        }
+        List<String> lines = Files.readAllLines(bundlesInfo, StandardCharsets.UTF_8);
+        List<String> filtered = removeManagedBlockLines(lines);
+        filtered.add(CONF_MARKER_START);
+        filtered.add("com.fusionquery.sqldev,1.0.0,../sqldeveloper/extensions/" + EXTENSION_JAR + ",4,false");
+        filtered.add(CONF_MARKER_END);
+        Files.write(bundlesInfo, filtered, StandardCharsets.UTF_8);
+        log.accept("Registered bundle in " + bundlesInfo);
     }
 
     private void copyBundledResource(String resourceName, Path target) throws IOException {

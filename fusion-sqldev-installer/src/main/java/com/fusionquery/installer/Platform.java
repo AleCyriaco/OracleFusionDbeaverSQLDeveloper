@@ -107,6 +107,11 @@ public enum Platform {
         return installDir.resolve("sqldeveloper").resolve("extensions");
     }
 
+    /** The equinox simpleconfigurator bundle list read at boot (OSGi-based versions). */
+    public static Path bundlesInfo(Path installDir) {
+        return installDir.resolve("configuration").resolve("bundles.info");
+    }
+
     /** Common SQL Developer install locations to probe / suggest in the UI. */
     public Path[] commonInstallPaths() {
         String home = System.getProperty("user.home");
