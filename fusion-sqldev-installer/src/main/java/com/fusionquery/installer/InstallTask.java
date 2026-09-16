@@ -81,6 +81,19 @@ public class InstallTask {
         copyBundledResource(EXTENSION_JAR, extTarget);
         log.accept("Copied extension JAR -> " + extTarget);
 
+        // The OSGi/netigso bundle cache lives under <user.home>/.sqldeveloper
+        // even when the configured user dir is %APPDATA%\sqldeveloper (26.x
+        // derives it from user.home, not ide.user.dir). A stale cache keeps
+        // serving the PREVIOUS copy of the extension after an upgrade, so
+        // clear any caches found there as well — and before the early return
+        // below, which fires when the user dir has no version folders yet.
+        Path dotSqldev = Paths.get(System.getProperty("user.home"), ".sqldeveloper");
+        if (!dotSqldev.equals(userDir)) {
+            for (SqlDevDetector.Detection d : SqlDevDetector.findVersions(dotSqldev)) {
+                clearCache(d.systemCache());
+            }
+        }
+
         if (detections.isEmpty()) {
             log.accept("No SQL Developer version directories found yet. The JARs are installed; "
                 + "launch SQL Developer once so it creates its config, then re-run the installer "
@@ -169,6 +182,13 @@ public class InstallTask {
             if (Files.isRegularFile(launcherConf)) {
                 removeManagedBlock(launcherConf);
                 log.accept("Cleaned launcher conf: " + launcherConf);
+            }
+        }
+
+        Path dotSqldev = Paths.get(System.getProperty("user.home"), ".sqldeveloper");
+        if (!dotSqldev.equals(userDir)) {
+            for (SqlDevDetector.Detection d : SqlDevDetector.findVersions(dotSqldev)) {
+                clearCache(d.systemCache());
             }
         }
 
