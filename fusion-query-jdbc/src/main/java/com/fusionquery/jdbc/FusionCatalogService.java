@@ -160,6 +160,20 @@ public class FusionCatalogService {
             try {
                 document = SoapXml.parse(response);
             } catch (IOException invalidXml) {
+                String body = response.trim();
+                String contentType = conn.getContentType();
+                boolean html = body.regionMatches(true, 0, "<!doctype", 0, 9)
+                        || body.regionMatches(true, 0, "<html", 0, 5)
+                        || (contentType != null && contentType.toLowerCase().contains("html"));
+                if (html) {
+                    // Fusion answers HTTP 200 with the SSO sign-in page when the
+                    // Basic credentials are rejected — say so instead of hiding
+                    // it behind a generic "invalid SOAP" message.
+                    throw new IOException(operation + " received an HTML page (HTTP " + status
+                            + ") instead of SOAP from " + CATALOG_SOAP
+                            + " — usually the SSO sign-in page, meaning the username or password"
+                            + " was rejected. Check the credentials in the connection.", invalidXml);
+                }
                 throw new IOException(operation + " returned HTTP " + status
                         + " without a valid SOAP response from " + CATALOG_SOAP, invalidXml);
             }
