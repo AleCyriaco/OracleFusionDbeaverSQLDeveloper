@@ -177,6 +177,7 @@ public class FusionCatalogService {
                 }
                 throw new IOException(operation + " returned HTTP " + status
                         + " without a valid SOAP response from " + CATALOG_SOAP
+                        + " (" + invalidXml.getMessage() + ")"
                         + responseDiagnostics(conn, status, body), invalidXml);
             }
             SoapXml.checkFault(document);

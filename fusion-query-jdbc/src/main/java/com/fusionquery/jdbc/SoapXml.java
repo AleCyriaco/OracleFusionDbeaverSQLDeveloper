@@ -11,9 +11,33 @@ import org.w3c.dom.NodeList;
 final class SoapXml {
     private SoapXml() {}
 
+    /**
+     * The JDK's own parser, ignoring JVM-wide JAXP overrides. SQL Developer's
+     * ide.conf points the javax.xml factories at Oracle XDK / Woodstox
+     * classes: inside an OSGi bundle DocumentBuilderFactory.newInstance()
+     * either cannot load them or gets a parser that rejects the Apache
+     * security feature names below — so a perfectly valid SOAP reply was
+     * reported as "not a valid SOAP response". newDefaultInstance() (Java 9+)
+     * sidesteps the override; the Java 8 fallbacks keep the old behaviour.
+     */
+    private static DocumentBuilderFactory newFactory() {
+        try {
+            return (DocumentBuilderFactory) DocumentBuilderFactory.class
+                    .getMethod("newDefaultInstance").invoke(null);
+        } catch (Throwable java8OrBlocked) {
+            // fall through
+        }
+        try {
+            return DocumentBuilderFactory.newInstance();
+        } catch (Throwable overrideNotLoadable) {
+            return DocumentBuilderFactory.newInstance(
+                    "com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl", null);
+        }
+    }
+
     static Document parse(String xml) throws IOException {
         try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilderFactory factory = newFactory();
             factory.setNamespaceAware(true);
             factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
             factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
@@ -23,7 +47,8 @@ final class SoapXml {
             return factory.newDocumentBuilder().parse(
                     new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception e) {
-            throw new IOException("Invalid XML response from BI Publisher", e);
+            throw new IOException("Invalid XML response from BI Publisher ("
+                    + e.getClass().getSimpleName() + ": " + e.getMessage() + ")", e);
         }
     }
 
