@@ -47,6 +47,27 @@ public enum Platform {
         }
     }
 
+    /**
+     * Every place a SQL Developer profile half can live, primary first. On
+     * Windows 26.x splits it between %APPDATA%\\sqldeveloper (product.conf) and
+     * %APPDATA%\\SQL Developer (system dir); ~/.sqldeveloper is the Unix default
+     * and also where the OSGi cache ends up when derived from user.home.
+     */
+    public java.util.List<Path> userDirCandidates(Path primary) {
+        java.util.List<Path> out = new java.util.ArrayList<>();
+        out.add(primary);
+        String home = System.getProperty("user.home");
+        if (this == WINDOWS) {
+            String appData = System.getenv("APPDATA");
+            if (appData != null && !appData.isEmpty()) {
+                out.add(Paths.get(appData, "sqldeveloper"));
+                out.add(Paths.get(appData, "SQL Developer"));
+            }
+        }
+        out.add(Paths.get(home, ".sqldeveloper"));
+        return out;
+    }
+
     /** True if the given directory contains at least one '<version>/product.conf'. */
     private static boolean looksLikeUserDir(Path dir) {
         if (!Files.isDirectory(dir)) return false;

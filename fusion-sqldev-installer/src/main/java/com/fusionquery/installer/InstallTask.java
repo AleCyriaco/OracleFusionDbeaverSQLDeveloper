@@ -81,18 +81,13 @@ public class InstallTask {
         copyBundledResource(EXTENSION_JAR, extTarget);
         log.accept("Copied extension JAR -> " + extTarget);
 
-        // The OSGi/netigso bundle cache lives under <user.home>/.sqldeveloper
-        // even when the configured user dir is %APPDATA%\sqldeveloper (26.x
-        // derives it from user.home, not ide.user.dir). A stale cache keeps
-        // serving the PREVIOUS copy of the extension after an upgrade, so
-        // clear any caches found there as well — and before the early return
-        // below, which fires when the user dir has no version folders yet.
-        Path dotSqldev = Paths.get(System.getProperty("user.home"), ".sqldeveloper");
-        if (!dotSqldev.equals(userDir)) {
-            for (SqlDevDetector.Detection d : SqlDevDetector.findVersions(dotSqldev)) {
-                clearCache(d.systemCache());
-            }
-        }
+        // Stale OSGi/netigso caches keep serving the PREVIOUS copy of the
+        // extension after an upgrade. The system dir can live in a different
+        // folder than product.conf (Windows 26.x: %APPDATA%\SQL Developer vs
+        // %APPDATA%\sqldeveloper; Unix: ~/.sqldeveloper), so clear caches in
+        // every candidate — and before the early return below, which fires
+        // when the primary user dir has no version folders yet.
+        clearAllKnownCaches();
 
         if (detections.isEmpty()) {
             log.accept("No SQL Developer version directories found yet. The JARs are installed; "
@@ -185,12 +180,7 @@ public class InstallTask {
             }
         }
 
-        Path dotSqldev = Paths.get(System.getProperty("user.home"), ".sqldeveloper");
-        if (!dotSqldev.equals(userDir)) {
-            for (SqlDevDetector.Detection d : SqlDevDetector.findVersions(dotSqldev)) {
-                clearCache(d.systemCache());
-            }
-        }
+        clearAllKnownCaches();
 
         for (SqlDevDetector.Detection d : detections) {
             removeManagedBlock(d.productConf);
@@ -460,6 +450,14 @@ public class InstallTask {
                 node.removeChild(child);
             } else if (child.getNodeType() == Node.ELEMENT_NODE) {
                 stripWhitespaceTextNodes(child);
+            }
+        }
+    }
+
+    private void clearAllKnownCaches() throws IOException {
+        for (Path dir : platform.userDirCandidates(userDir)) {
+            for (SqlDevDetector.Detection d : SqlDevDetector.findVersions(dir)) {
+                clearCache(d.systemCache());
             }
         }
     }

@@ -30,7 +30,7 @@ public class Installer {
 
         Platform platform = Platform.detect();
         Path userDir = overrideUserDir != null ? overrideUserDir : platform.userDir();
-        List<SqlDevDetector.Detection> detections = SqlDevDetector.findVersions(userDir);
+        List<SqlDevDetector.Detection> detections = SqlDevDetector.findVersionsIn(platform.userDirCandidates(userDir));
         Path installDir = overrideInstallDir != null ? overrideInstallDir : platform.findInstallDir();
 
         if (cli || GraphicsEnvironment.isHeadless()) {
@@ -182,7 +182,7 @@ public class Installer {
             }
 
             this.userDir = resolved;
-            this.detections = SqlDevDetector.findVersions(resolved);
+            this.detections = SqlDevDetector.findVersionsIn(platform.userDirCandidates(resolved));
             logArea.setText("");
             populateSummary();
         }

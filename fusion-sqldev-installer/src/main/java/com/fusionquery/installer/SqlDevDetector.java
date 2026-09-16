@@ -61,6 +61,30 @@ public class SqlDevDetector {
         return out;
     }
 
+    /**
+     * Merge detections from several candidate user dirs. SQL Developer 26.x on
+     * Windows keeps '<version>/product.conf' under %APPDATA%\\sqldeveloper but the
+     * 'system<version>' dir (system cache, product-preferences.xml) under
+     * %APPDATA%\\SQL Developer — so a single-dir scan never sees both halves.
+     * For each version: product.conf from the dir that has it, system dir from
+     * wherever it exists.
+     */
+    public static List<Detection> findVersionsIn(List<Path> userDirs) {
+        Map<String, Detection> merged = new TreeMap<>();
+        for (Path dir : userDirs) {
+            if (dir == null) continue;
+            for (Detection d : findVersions(dir)) {
+                Detection prev = merged.get(d.version);
+                if (prev == null) { merged.put(d.version, d); continue; }
+                Path productConf = Files.isRegularFile(prev.productConf) ? prev.productConf
+                        : Files.isRegularFile(d.productConf) ? d.productConf : prev.productConf;
+                Path systemDir = prev.systemDir != null ? prev.systemDir : d.systemDir;
+                merged.put(d.version, new Detection(d.version, productConf, systemDir));
+            }
+        }
+        return new ArrayList<>(merged.values());
+    }
+
     public static class Detection {
         public final String version;
         public final Path productConf;
