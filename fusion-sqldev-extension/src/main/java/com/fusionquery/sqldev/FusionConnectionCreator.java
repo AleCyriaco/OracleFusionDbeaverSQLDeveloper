@@ -25,10 +25,9 @@ public class FusionConnectionCreator extends AbstractConnectionCreator {
         String timeout = props.getProperty(PROP_TIMEOUT, "").trim();
         if (!timeout.isEmpty()) params.add("timeout=" + timeout);
 
-        String user = props.getProperty("user", "").trim();
-        if (!user.isEmpty()) params.add("user=" + urlEncode(user));
-        String password = props.getProperty("password", "").trim();
-        if (!password.isEmpty()) params.add("password=" + urlEncode(password));
+        // user/password intentionally NOT embedded in the URL: the framework's
+        // getJDBCProperties() already hands both to Driver.connect, and a URL
+        // with credentials can end up persisted in plain text.
 
         if (!params.isEmpty()) url.append("?").append(String.join("&", params));
         return url.toString();
