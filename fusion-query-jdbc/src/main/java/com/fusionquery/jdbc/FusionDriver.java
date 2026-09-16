@@ -30,6 +30,10 @@ public class FusionDriver implements Driver {
         if (info == null) info = new Properties();
 
         String host = url.substring(URL_PREFIX.length()).replaceAll("/+$", "");
+        // Tolerate a pasted full URL: "jdbc:fusion://https://pod.fa.us2..." or a
+        // hostname field filled with "https://pod...". Strip the scheme here so
+        // it doesn't become the literal host (UnknownHostException: https).
+        host = host.replaceFirst("(?i)^https?://", "");
 
         // Optional user:password@host syntax
         int at = host.indexOf('@');
@@ -55,6 +59,10 @@ public class FusionDriver implements Driver {
                 }
             }
         }
+
+        // Drop any pasted path such as /xmlpserver or /fscmUI/faces/...
+        int slash = host.indexOf('/');
+        if (slash >= 0) host = host.substring(0, slash);
 
         String baseUrl = "https://" + host;
         String user = info.getProperty("user");
