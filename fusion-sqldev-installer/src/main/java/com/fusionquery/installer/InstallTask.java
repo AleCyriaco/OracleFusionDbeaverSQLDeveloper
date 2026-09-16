@@ -62,10 +62,13 @@ public class InstallTask {
         Path resolvedInstallDir = installDir != null ? installDir : platform.findInstallDir();
         boolean haveInstallDir = resolvedInstallDir != null && Platform.looksLikeInstallDir(resolvedInstallDir);
         Path sqldevExtensionsDir = haveInstallDir ? Platform.extensionsDir(resolvedInstallDir) : null;
-        assertNotLocked(standaloneDir.resolve(DRIVER_JAR),
-                        standaloneDir.resolve(EXTENSION_JAR),
-                        extDir.resolve(EXTENSION_JAR),
-                        sqldevExtensionsDir != null ? sqldevExtensionsDir.resolve(EXTENSION_JAR) : null);
+        List<Path> probes = new ArrayList<>(Arrays.asList(
+                standaloneDir.resolve(DRIVER_JAR),
+                standaloneDir.resolve(EXTENSION_JAR),
+                extDir.resolve(EXTENSION_JAR),
+                sqldevExtensionsDir != null ? sqldevExtensionsDir.resolve(EXTENSION_JAR) : null));
+        probes.addAll(cacheLockProbes());
+        assertNotLocked(probes.toArray(new Path[0]));
 
         // 1) Canonical standalone location used by DBeaver / DataGrip / IntelliJ
         Files.createDirectories(standaloneDir);
@@ -146,11 +149,14 @@ public class InstallTask {
         Path resolvedInstallDir = installDir != null ? installDir : platform.findInstallDir();
         Path sqldevExtensionsDir = resolvedInstallDir != null
                 ? Platform.extensionsDir(resolvedInstallDir) : null;
-        assertNotLocked(extDir.resolve(EXTENSION_JAR),
-                        extDir.resolve(DRIVER_JAR),
-                        standaloneDir.resolve(EXTENSION_JAR),
-                        standaloneDir.resolve(DRIVER_JAR),
-                        sqldevExtensionsDir != null ? sqldevExtensionsDir.resolve(EXTENSION_JAR) : null);
+        List<Path> probes = new ArrayList<>(Arrays.asList(
+                extDir.resolve(EXTENSION_JAR),
+                extDir.resolve(DRIVER_JAR),
+                standaloneDir.resolve(EXTENSION_JAR),
+                standaloneDir.resolve(DRIVER_JAR),
+                sqldevExtensionsDir != null ? sqldevExtensionsDir.resolve(EXTENSION_JAR) : null));
+        probes.addAll(cacheLockProbes());
+        assertNotLocked(probes.toArray(new Path[0]));
 
         Files.deleteIfExists(extDir.resolve(EXTENSION_JAR));
         Files.deleteIfExists(extDir.resolve(DRIVER_JAR));
@@ -198,6 +204,22 @@ public class InstallTask {
      * Probe every JAR we are about to replace before touching anything and
      * stop with an actionable message instead.
      */
+    /**
+     * A running SQL Developer does NOT hold the extension JAR open (equinox
+     * serves bundles from its cache) but it does hold system_cache/var/cache/
+     * all-extensions.dat — the reliable signal that the IDE is still up.
+     */
+    private List<Path> cacheLockProbes() {
+        List<Path> probes = new ArrayList<>();
+        for (Path dir : platform.userDirCandidates(userDir)) {
+            for (SqlDevDetector.Detection d : SqlDevDetector.findVersions(dir)) {
+                Path cache = d.systemCache();
+                if (cache != null) probes.add(cache.resolve("var").resolve("cache").resolve("all-extensions.dat"));
+            }
+        }
+        return probes;
+    }
+
     private void assertNotLocked(Path... targets) throws IOException {
         for (Path target : targets) {
             if (target == null || !Files.isRegularFile(target)) continue;
@@ -207,7 +229,7 @@ public class InstallTask {
             } catch (IOException e) {
                 throw new IOException(
                     "SQL Developer still seems to be running — Windows will not let the "
-                    + "installer replace a JAR it has open:\n  " + target
+                    + "installer replace a file it has open:\n  " + target
                     + "\nQuit SQL Developer completely (File > Exit, then check Task Manager "
                     + "for a leftover javaw.exe) and run the installer again.", e);
             }
